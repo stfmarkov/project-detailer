@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import MainButton from '../components/MainButton.vue'
+import type { IProject } from '../../server/models/Project'
 
 definePageMeta({
   layout: 'project'
 })
 
+const route = useRoute()
+const project = ref<IProject | null>(null)
 const form = reactive({
-  projectId: '',
+  projectId: route.query.projectId as string,
   title: '',
   content: ''
 })
@@ -15,7 +18,7 @@ const isSubmitting = ref(false)
 const message = ref<{ type: 'success' | 'error'; text: string } | null>(null)
 
 const handleSubmit = async () => {
-  if (!form.projectId || !form.title || !form.content) {
+  if (!form.title || !form.content) {
     message.value = { type: 'error', text: 'All fields are required' }
     return
   }
@@ -33,6 +36,8 @@ const handleSubmit = async () => {
       }
     })
 
+    console.log(response)
+
     message.value = { type: 'success', text: 'Context added successfully!' }
     
     // Clear form except projectId (user likely adding multiple to same project)
@@ -47,25 +52,23 @@ const handleSubmit = async () => {
     isSubmitting.value = false
   }
 }
+
+onMounted(async () => {
+  project.value = await $fetch<IProject | null>('/api/getProject', {
+    method: 'GET',
+    query: {
+      projectId: form.projectId
+    }
+  })
+  console.log(project.value)
+})
 </script>
 
 <template>
 
-  <ProjectHeader title="Project Detailer" subtitle="Add context to your project" />
+  <ProjectHeader :title="project?.title || 'Project Detailer'" :subtitle="project?.category || 'Add context to your project'" />
 
   <form @submit.prevent="handleSubmit" class="form">
-    <div class="field">
-      <label for="projectId">Project ID</label>
-      <input
-        id="projectId"
-        v-model="form.projectId"
-        type="text"
-        placeholder="e.g., my-novel, app-v2, game-project"
-        :disabled="isSubmitting"
-      />
-      <span class="hint">Use a consistent ID for each project</span>
-    </div>
-
     <div class="field">
       <label for="title">Title</label>
       <input
