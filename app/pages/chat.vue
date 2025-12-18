@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { IProject } from '../../server/models/Project'
 
 definePageMeta({
   layout: 'project'
@@ -10,13 +11,16 @@ interface Message {
   sources?: Array<{ title: string; score: number }>
 }
 
-const projectId = ref('')
+const project = ref<IProject | null>(null)
+const route = useRoute()
+
+const projectId = computed(() => route.query.projectId as string)
 const question = ref('')
 const messages = ref<Message[]>([])
 const isLoading = ref(false)
 const chatContainer = ref<HTMLElement | null>(null)
 
-async function sendMessage() {
+const sendMessage = async () => {
   if (!projectId.value.trim() || !question.value.trim() || isLoading.value) return
 
   const userQuestion = question.value
@@ -56,7 +60,7 @@ async function sendMessage() {
   }
 }
 
-function scrollToBottom() {
+const scrollToBottom = () => {
   nextTick(() => {
     if (chatContainer.value) {
       chatContainer.value.scrollTop = chatContainer.value.scrollHeight
@@ -64,20 +68,24 @@ function scrollToBottom() {
   })
 }
 
-function clearChat() {
+const clearChat = () => {
   messages.value = []
 }
+
+onMounted(async () => {
+  project.value = await $fetch<IProject | null>('/api/getProject', {
+    method: 'GET',
+    query: {
+      projectId: projectId.value
+    }
+  })
+  console.log(project.value)
+})
 </script>
 
 <template>
-  <ProjectHeader title="Project Detailer" subtitle="Ask questions about your project" />
+  <ProjectHeader :title="project?.title || 'Project Detailer'" subtitle="Ask questions about your project" />
   
-  <div class="project-select">
-    <label for="projectId">Project ID</label>
-    <input id="projectId" v-model="projectId" type="text" placeholder="Enter your project ID..."
-      :disabled="isLoading" />
-  </div>
-
 
   <div class="chat-area">
     <div ref="chatContainer" class="messages">

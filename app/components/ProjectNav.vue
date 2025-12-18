@@ -7,6 +7,15 @@ const route = useRoute()
 
 const isChatPage = computed(() => route.path === '/chat')
 
+const projectId = computed(() => route.query.projectId as string)
+
+const chatLink = computed(() => {
+    return projectId.value ? `/chat?projectId=${projectId.value}` : '/chat'
+})
+const addContextLink = computed(() => {
+    return projectId.value ? `/?projectId=${projectId.value}` : '/'
+})
+
 </script>
 
 <template>
@@ -14,8 +23,8 @@ const isChatPage = computed(() => route.path === '/chat')
 
         <NuxtLink to="/projects" class="nav-link">Projects</NuxtLink>
 
-        <NuxtLink v-if="!isChatPage" to="/chat" class="nav-link">Chat</NuxtLink>
-        <NuxtLink v-if="isChatPage" to="/" class="nav-link">+ Add Context</NuxtLink>
+        <NuxtLink v-if="!isChatPage" :to="chatLink" class="nav-link">Chat</NuxtLink>
+        <NuxtLink v-if="isChatPage" :to="addContextLink" class="nav-link">+ Add Context</NuxtLink>
     </nav>
 </template>
 
