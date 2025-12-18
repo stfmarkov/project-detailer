@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MainButton from '../components/MainButton.vue'
 
 definePageMeta({
   layout: 'project'
@@ -13,7 +14,7 @@ const form = reactive({
 const isSubmitting = ref(false)
 const message = ref<{ type: 'success' | 'error'; text: string } | null>(null)
 
-async function handleSubmit() {
+const handleSubmit = async () => {
   if (!form.projectId || !form.title || !form.content) {
     message.value = { type: 'error', text: 'All fields are required' }
     return
@@ -91,14 +92,19 @@ async function handleSubmit() {
       {{ message.text }}
     </div>
 
-    <button type="submit" :disabled="isSubmitting" class="submit-btn">
+    <MainButton :disabled="isSubmitting" @click="handleSubmit">
       <span v-if="isSubmitting">Adding...</span>
       <span v-else>Add to Knowledge Base</span>
-    </button>
+    </MainButton>
   </form>
 </template>
 
 <style scoped>
+  
+.main-button {
+  width: 100%;
+}
+
 .form {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -180,32 +186,5 @@ async function handleSubmit() {
   background: rgba(255, 71, 87, 0.15);
   border: 1px solid rgba(255, 71, 87, 0.3);
   color: #ff4757;
-}
-
-.submit-btn {
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(135deg, #e94560 0%, #c73e54 100%);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-
-.submit-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
-}
-
-.submit-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.submit-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
 }
 </style>

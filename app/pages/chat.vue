@@ -70,23 +70,8 @@ function clearChat() {
 </script>
 
 <template>
-  <!-- <header class="header">
-    <div class="header-content">
-      <h1>Project Detailer</h1>
-      <p class="subtitle">Ask questions about your project</p>
-    </div>
-    <NuxtLink to="/" class="nav-link">+ Add Context</NuxtLink>
-  </header> -->
-
   <ProjectHeader title="Project Detailer" subtitle="Ask questions about your project" />
   
-  <!-- <div class="project-select">
-    <label for="projectId">Project ID</label>
-    <input id="projectId" v-model="projectId" type="text" placeholder="Enter your project ID..."
-      :disabled="isLoading" />
-  </div> -->
-
-
   <div class="project-select">
     <label for="projectId">Project ID</label>
     <input id="projectId" v-model="projectId" type="text" placeholder="Enter your project ID..."
@@ -125,9 +110,10 @@ function clearChat() {
 
     <form @submit.prevent="sendMessage" class="input-area">
       <input v-model="question" type="text" placeholder="Ask a question..." :disabled="isLoading || !projectId" />
-      <button type="submit" :disabled="isLoading || !projectId || !question.trim()">
-        Send
-      </button>
+      <MainButton :disabled="isLoading || !projectId || !question.trim()" @click="sendMessage">
+        <span v-if="isLoading">Sending...</span>
+        <span v-else>Send</span>
+      </MainButton>
     </form>
   </div>
 

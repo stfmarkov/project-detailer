@@ -1,6 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose'
+import mongoose, { Schema, Document, ObjectId } from 'mongoose'
 
-export interface IContext extends Document {
+export interface IContext extends Document<ObjectId> {
+  _id: ObjectId
   projectId: string
   title: string
   content: string
