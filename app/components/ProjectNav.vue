@@ -5,23 +5,19 @@ const props = defineProps<{
 
 const route = useRoute()
 
-const isChatPage = computed(() => route.path === '/chat')
+const isChatPage = computed(() => route.path.includes('/chat'))
 
-const projectId = computed(() => route.query.projectId as string)
+const projectId = computed(() => route.params.projectId as string)
 
-const chatLink = computed(() => {
-    return projectId.value ? `/chat?projectId=${projectId.value}` : '/chat'
-})
-const addContextLink = computed(() => {
-    return projectId.value ? `/?projectId=${projectId.value}` : '/'
-})
+const chatLink = computed(() => `/project-${projectId.value}/chat`)
+const addContextLink = computed(() => `/project-${projectId.value}/add-context`)
 
 </script>
 
 <template>
     <nav class="nav">
 
-        <NuxtLink to="/projects" class="nav-link">Projects</NuxtLink>
+        <NuxtLink to="/" class="nav-link">Projects</NuxtLink>
 
         <NuxtLink v-if="!isChatPage" :to="chatLink" class="nav-link">Chat</NuxtLink>
         <NuxtLink v-if="isChatPage" :to="addContextLink" class="nav-link">+ Add Context</NuxtLink>

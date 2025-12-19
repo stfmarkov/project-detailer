@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IProject } from '../../server/models/Project'
+import type { IProject } from '../../../server/models/Project'
 
 definePageMeta({
   layout: 'project'
@@ -47,7 +47,7 @@ const sendMessage = async () => {
     messages.value.push({
       role: 'assistant',
       content: response.answer,
-      sources: response.sources
+      sources: response.sources as Array<{ title: string; score: number }>
     })
   } catch (error: any) {
     messages.value.push({

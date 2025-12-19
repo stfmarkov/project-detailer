@@ -1,193 +1,184 @@
 <script setup lang="ts">
-import MainButton from '../components/MainButton.vue'
 import type { IProject } from '../../server/models/Project'
+import { useRouter } from 'vue-router'
+import MainButton from '@/components/MainButton.vue'
 
 definePageMeta({
   layout: 'project'
 })
 
-const route = useRoute()
-const project = ref<IProject | null>(null)
-const form = reactive({
-  projectId: route.query.projectId as string,
-  title: '',
-  content: ''
-})
-
-const isSubmitting = ref(false)
-const message = ref<{ type: 'success' | 'error'; text: string } | null>(null)
-
-const handleSubmit = async () => {
-  if (!form.title || !form.content) {
-    message.value = { type: 'error', text: 'All fields are required' }
-    return
-  }
-
-  isSubmitting.value = true
-  message.value = null
-
-  try {
-    const response = await $fetch('/api/addContext', {
-      method: 'POST',
-      body: {
-        projectId: form.projectId,
-        title: form.title,
-        content: form.content
-      }
-    })
-
-    console.log(response)
-
-    message.value = { type: 'success', text: 'Context added successfully!' }
-    
-    // Clear form except projectId (user likely adding multiple to same project)
-    form.title = ''
-    form.content = ''
-  } catch (error: any) {
-    message.value = { 
-      type: 'error', 
-      text: error.data?.statusMessage || 'Failed to add context' 
-    }
-  } finally {
-    isSubmitting.value = false
-  }
-}
+const router = useRouter()
+const projects = ref<IProject[]>([])
 
 onMounted(async () => {
-  project.value = await $fetch<IProject | null>('/api/getProject', {
-    method: 'GET',
-    query: {
-      projectId: form.projectId
-    }
-  })
-  console.log(project.value)
+  projects.value = await $fetch<IProject[]>('/api/getAllProjects')
 })
+
+const createProject = () => {
+  router.push('/new-project')
+}
+
 </script>
 
 <template>
-
-  <ProjectHeader :title="project?.title || 'Project Detailer'" :subtitle="project?.category || 'Add context to your project'" />
-
-  <form @submit.prevent="handleSubmit" class="form">
-    <div class="field">
-      <label for="title">Title</label>
-      <input
-        id="title"
-        v-model="form.title"
-        type="text"
-        placeholder="e.g., Main Character - Sarah, Login Feature, Chapter 3 Plot"
-        :disabled="isSubmitting"
-      />
+  <ProjectHeader title="Projects" subtitle="Manage your projects" />
+  
+  <div class="projects-page">
+    <div v-if="projects.length === 0" class="empty-state">
+      <div class="empty-icon">📁</div>
+      <h3>No projects yet</h3>
+      <p>Create your first project to start building your knowledge base</p>
+      <MainButton :disabled="false" @click="createProject">+ Create Project</MainButton>
     </div>
 
-    <div class="field">
-      <label for="content">Content</label>
-      <textarea
-        id="content"
-        v-model="form.content"
-        rows="8"
-        placeholder="Describe the detail, character, feature, concept... Be as detailed as you like."
-        :disabled="isSubmitting"
-      />
+    <div v-else class="projects-container">
+      <div class="projects-header">
+        <span class="project-count">{{ projects.length }} project{{ projects.length !== 1 ? 's' : '' }}</span>
+        <MainButton :disabled="false" @click="createProject">+ New Project</MainButton>
+      </div>
+      
+      <div class="projects-grid">
+        <NuxtLink 
+          v-for="project in projects" 
+          :key="project._id.toString()"
+          :to="`/project-${project._id.toString()}/context`"
+          class="project-card"
+        >
+          <div class="project-icon">📋</div>
+          <div class="project-info">
+            <h3 class="project-title">{{ project.title }}</h3>
+            <span class="project-category">{{ project.category }}</span>
+          </div>
+          <div class="project-arrow">→</div>
+        </NuxtLink>
+      </div>
     </div>
-
-    <div v-if="message" :class="['message', message.type]">
-      {{ message.text }}
-    </div>
-
-    <MainButton :disabled="isSubmitting" @click="handleSubmit">
-      <span v-if="isSubmitting">Adding...</span>
-      <span v-else>Add to Knowledge Base</span>
-    </MainButton>
-  </form>
+  </div>
 </template>
 
 <style scoped>
-  
-.main-button {
-  width: 100%;
+.projects-page {
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.form {
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.6;
+}
+
+.empty-state h3 {
+  color: #e0e0e0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-state p {
+  color: #808090;
+  font-size: 1rem;
+  margin: 0 0 2rem 0;
+  max-width: 300px;
+}
+
+/* Projects List */
+.projects-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.projects-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.project-count {
+  color: #808090;
+  font-size: 0.9rem;
+}
+
+.projects-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.project-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 2rem;
-  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
 }
 
-.field {
-  margin-bottom: 1.5rem;
+.project-card:hover {
+  border-color: rgba(233, 69, 96, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(4px);
 }
 
-.field label {
-  display: block;
+.project-icon {
+  font-size: 1.5rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(233, 69, 96, 0.1);
+  border-radius: 10px;
+}
+
+.project-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.project-title {
   color: #e0e0e0;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.field input,
-.field textarea {
-  width: 100%;
-  padding: 0.875rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  font-family: inherit;
+.project-category {
+  color: #e94560;
+  font-size: 0.85rem;
+  background: rgba(233, 69, 96, 0.15);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
 }
 
-.field input::placeholder,
-.field textarea::placeholder {
+.project-arrow {
   color: #606070;
+  font-size: 1.2rem;
+  transition: color 0.2s, transform 0.2s;
 }
 
-.field input:focus,
-.field textarea:focus {
-  outline: none;
-  border-color: #e94560;
-  box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.15);
-}
-
-.field input:disabled,
-.field textarea:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.field textarea {
-  resize: vertical;
-  min-height: 150px;
-  line-height: 1.6;
-}
-
-.hint {
-  display: block;
-  color: #707080;
-  font-size: 0.8rem;
-  margin-top: 0.4rem;
-}
-
-.message {
-  padding: 0.875rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-}
-
-.message.success {
-  background: rgba(46, 213, 115, 0.15);
-  border: 1px solid rgba(46, 213, 115, 0.3);
-  color: #2ed573;
-}
-
-.message.error {
-  background: rgba(255, 71, 87, 0.15);
-  border: 1px solid rgba(255, 71, 87, 0.3);
-  color: #ff4757;
+.project-card:hover .project-arrow {
+  color: #e94560;
+  transform: translateX(4px);
 }
 </style>
