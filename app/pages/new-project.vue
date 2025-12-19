@@ -66,45 +66,29 @@ async function handleSubmit() {
       <!-- Project Title -->
       <div class="field">
         <label for="title">Project Name</label>
-        <input
-          id="title"
-          v-model="form.title"
-          type="text"
-          placeholder="e.g., My Novel, App v2.0, Game Design Doc"
-          :disabled="isSubmitting"
-          autofocus
-        />
+        <input id="title" v-model="form.title" type="text" placeholder="e.g., My Novel, App v2.0, Game Design Doc"
+          :disabled="isSubmitting" autofocus />
       </div>
 
       <!-- Category Selection -->
       <div class="field">
         <label>Category</label>
         <div class="category-grid">
-          <button
-            v-for="cat in categories"
-            :key="cat.value"
-            type="button"
-            :class="['category-card', { selected: selectedCategory === cat.value }]"
-            @click="selectCategory(cat.value)"
-            :disabled="isSubmitting"
-          >
+          <Card v-for="cat in categories" :key="cat.value" type="button"
+            :class="[{ selected: selectedCategory === cat.value }]" @click="selectCategory(cat.value)"
+            :disabled="isSubmitting" as="button">
             <span class="category-icon">{{ cat.label.split(' ')[0] }}</span>
             <span class="category-label">{{ cat.label.split(' ').slice(1).join(' ') }}</span>
             <span class="category-desc">{{ cat.description }}</span>
-          </button>
+          </Card>
         </div>
       </div>
 
       <!-- Custom Category Input (shown if 'other' selected) -->
       <div v-if="selectedCategory === 'other'" class="field">
         <label for="customCategory">Custom Category</label>
-        <input
-          id="customCategory"
-          v-model="form.category"
-          type="text"
-          placeholder="Enter your category..."
-          :disabled="isSubmitting"
-        />
+        <input id="customCategory" v-model="form.category" type="text" placeholder="Enter your category..."
+          :disabled="isSubmitting" />
       </div>
 
       <!-- Error Message -->
@@ -184,32 +168,15 @@ async function handleSubmit() {
   gap: 0.75rem;
 }
 
-.category-card {
-  display: flex;
+.card {
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  padding: 1.25rem 0.75rem;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s, transform 0.15s;
 }
 
-.category-card:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.category-card.selected {
+.card.selected {
   border-color: #e94560;
   background: rgba(233, 69, 96, 0.1);
-}
-
-.category-card:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .category-icon {
@@ -295,15 +262,14 @@ async function handleSubmit() {
   .category-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .form-actions {
     flex-direction: column-reverse;
   }
-  
+
   .cancel-btn,
   .submit-btn {
     width: 100%;
   }
 }
 </style>
-

@@ -195,10 +195,10 @@ async function deleteTask(taskId: string) {
 
         <!-- Tasks List -->
         <div v-else class="tasks-list">
-            <div
+            <Card
                 v-for="task in tasks"
                 :key="task._id.toString()"
-                :class="['task-card', { completed: task.status === 'completed' }]"
+                :inactive="task.status === 'completed'"
             >
                 <!-- View Mode -->
                 <div v-if="editingTaskId !== task._id.toString()" class="task-content">
@@ -254,7 +254,7 @@ async function deleteTask(taskId: string) {
                         </button>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
 
         <!-- Task Stats -->
@@ -412,26 +412,17 @@ async function deleteTask(taskId: string) {
     gap: 0.5rem;
 }
 
-.task-card {
+.card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     transition: border-color 0.2s;
 }
 
-.task-card:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-}
-
-.task-card.completed {
-    opacity: 0.6;
-}
-
 .task-content {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
-    padding: 1rem 1.25rem;
 }
 
 /* Status Checkbox */
@@ -476,7 +467,7 @@ async function deleteTask(taskId: string) {
     font-weight: 500;
 }
 
-.task-card.completed .task-title {
+.card--inactive .task-title {
     text-decoration: line-through;
     color: #808090;
 }
@@ -495,7 +486,7 @@ async function deleteTask(taskId: string) {
     transition: opacity 0.2s;
 }
 
-.task-card:hover .task-actions {
+.card:hover .task-actions {
     opacity: 1;
 }
 

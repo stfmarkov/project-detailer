@@ -38,11 +38,10 @@ const createProject = () => {
       </div>
       
       <div class="projects-grid">
-        <NuxtLink 
+        <Card 
           v-for="project in projects" 
           :key="project._id.toString()"
           :to="`/project-${project._id.toString()}`"
-          class="project-card"
         >
           <div class="project-icon">📋</div>
           <div class="project-info">
@@ -50,7 +49,7 @@ const createProject = () => {
             <span class="project-category">{{ project.category }}</span>
           </div>
           <div class="project-arrow">→</div>
-        </NuxtLink>
+        </Card>
       </div>
     </div>
   </div>
@@ -119,24 +118,6 @@ const createProject = () => {
   gap: 0.75rem;
 }
 
-.project-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.25rem 1.5rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  text-decoration: none;
-  transition: border-color 0.2s, background 0.2s, transform 0.15s;
-}
-
-.project-card:hover {
-  border-color: rgba(233, 69, 96, 0.4);
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateX(4px);
-}
-
 .project-icon {
   font-size: 1.5rem;
   width: 48px;
@@ -177,8 +158,4 @@ const createProject = () => {
   transition: color 0.2s, transform 0.2s;
 }
 
-.project-card:hover .project-arrow {
-  color: #e94560;
-  transform: translateX(4px);
-}
 </style>

@@ -24,80 +24,80 @@ onMounted(async () => {
     <div class="project-page">
         <!-- Quick Stats -->
         <div class="stats-row">
-            <div class="stat-card">
+            <Card>
                 <span class="stat-icon">📄</span>
                 <div class="stat-info">
                     <span class="stat-value">—</span>
                     <span class="stat-label">Context Entries</span>
                 </div>
-            </div>
-            <div class="stat-card">
+            </Card>
+            <Card>
                 <span class="stat-icon">✅</span>
                 <div class="stat-info">
                     <span class="stat-value">—</span>
                     <span class="stat-label">Tasks</span>
                 </div>
-            </div>
-            <div class="stat-card">
+            </Card>
+            <Card>
                 <span class="stat-icon">💬</span>
                 <div class="stat-info">
                     <span class="stat-value">—</span>
                     <span class="stat-label">Chat Sessions</span>
                 </div>
-            </div>
+            </Card>
         </div>
 
         <!-- Quick Actions -->
         <div class="actions-section">
             <h3 class="section-title">Quick Actions</h3>
             <div class="actions-grid">
-                <NuxtLink :to="`/project-${projectId}/add-context`" class="action-card">
+                <Card :to="`/project-${projectId}/add-context`">
                     <span class="action-icon">➕</span>
                     <div class="action-content">
                         <span class="action-title">Add Context</span>
                         <span class="action-desc">Add new information to your knowledge base</span>
                     </div>
                     <span class="action-arrow">→</span>
-                </NuxtLink>
+                </Card>
                 
-                <NuxtLink :to="`/project-${projectId}/context`" class="action-card">
+                <Card :to="`/project-${projectId}/context`">
                     <span class="action-icon">📚</span>
                     <div class="action-content">
                         <span class="action-title">View Context</span>
                         <span class="action-desc">Browse and manage existing entries</span>
                     </div>
                     <span class="action-arrow">→</span>
-                </NuxtLink>
+                </Card>
                 
-                <NuxtLink :to="`/project-${projectId}/chat`" class="action-card">
+                <Card :to="`/project-${projectId}/chat`">
                     <span class="action-icon">💬</span>
                     <div class="action-content">
                         <span class="action-title">Chat</span>
                         <span class="action-desc">Ask questions about your project</span>
                     </div>
                     <span class="action-arrow">→</span>
-                </NuxtLink>
+                </Card>
                 
-                <NuxtLink :to="`/project-${projectId}/tasks`" class="action-card">
+                <Card :to="`/project-${projectId}/tasks`">
                     <span class="action-icon">✅</span>
                     <div class="action-content">
                         <span class="action-title">Tasks</span>
                         <span class="action-desc">View and manage project tasks</span>
                     </div>
                     <span class="action-arrow">→</span>
-                </NuxtLink>
+                </Card>
             </div>
         </div>
 
         <!-- Project Info -->
         <div class="info-section">
             <h3 class="section-title">Project Info</h3>
-            <div class="info-card">
+            <Card>
                 <div class="info-row">
                     <span class="info-label">Project ID</span>
                     <span class="info-value mono">{{ projectId }}</span>
                 </div>
-            </div>
+            </Card>
         </div>
     </div>
 </template>
@@ -116,16 +116,6 @@ onMounted(async () => {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-}
-
-.stat-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
 }
 
 .stat-icon {
@@ -172,24 +162,6 @@ onMounted(async () => {
     gap: 0.75rem;
 }
 
-.action-card {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    text-decoration: none;
-    transition: border-color 0.2s, background 0.2s, transform 0.15s;
-}
-
-.action-card:hover {
-    border-color: rgba(233, 69, 96, 0.4);
-    background: rgba(255, 255, 255, 0.05);
-    transform: translateX(4px);
-}
-
 .action-icon {
     font-size: 1.25rem;
     width: 40px;
@@ -228,29 +200,17 @@ onMounted(async () => {
     flex-shrink: 0;
 }
 
-.action-card:hover .action-arrow {
+.card:hover .action-arrow {
     color: #e94560;
     transform: translateX(4px);
 }
 
 /* Info Section */
-.info-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    overflow: hidden;
-}
-
 .info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.info-row:last-child {
-    border-bottom: none;
+    width: 100%;
 }
 
 .info-label {
