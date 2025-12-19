@@ -14,7 +14,7 @@ interface Message {
 const project = ref<IProject | null>(null)
 const route = useRoute()
 
-const projectId = computed(() => route.query.projectId as string)
+const projectId = computed(() => route.params.projectId as string)
 const question = ref('')
 const messages = ref<Message[]>([])
 const isLoading = ref(false)

@@ -2,6 +2,7 @@ import { connectToMongoDB } from '../utils/mongodb'
 import { generateEmbedding } from '../utils/embeddings'
 import { chat } from '../utils/claude'
 import { Context } from '../models/Context'
+import { Task } from '../models/Task'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -41,8 +42,14 @@ export default defineEventHandler(async (event) => {
       }
     ])
 
-    // Get answer from Claude using retrieved contexts
-    const answer = await chat(question, results)
+    // Fetch active tasks (pending and in_progress)
+    const tasks = await Task.find({
+      projectId,
+      status: { $in: ['pending', 'in_progress'] }
+    }).sort({ createdAt: -1 }).lean()
+
+    // Get answer from Claude using retrieved contexts and tasks
+    const answer = await chat(question, results, tasks)
 
     return {
       success: true,

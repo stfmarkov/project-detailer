@@ -41,7 +41,7 @@ const createProject = () => {
         <NuxtLink 
           v-for="project in projects" 
           :key="project._id.toString()"
-          :to="`/project-${project._id.toString()}/context`"
+          :to="`/project-${project._id.toString()}`"
           class="project-card"
         >
           <div class="project-icon">📋</div>
