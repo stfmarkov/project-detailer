@@ -1,5 +1,6 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { Task } from '../models/Task'
+import { createTask } from '../services/createTask'
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event)
@@ -15,14 +16,10 @@ export default defineEventHandler(async (event) => {
     try {
         await connectToMongoDB()
 
-        const task = await Task.create({
-            projectId,
-            title,
-            description: description || ''
-        })
+        const { success, message: task } = await createTask(title, description, projectId)
 
         return {
-            success: true,
+            success,
             task
         }
     } catch (error: any) {

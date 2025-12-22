@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
     }).sort({ createdAt: -1 }).lean()
 
     // Get answer from Claude using retrieved contexts and tasks
-    const answer = await chat(question, results, tasks)
+    const answer = await chat(question, results, tasks, projectId)
 
     return {
       success: true,

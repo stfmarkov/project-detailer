@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { executeAIAction } from '../services/executeAIAction'
 
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY
@@ -15,7 +16,28 @@ interface ChatTask {
   status: string
 }
 
-export async function chat(question: string, contexts: ChatContext[], tasks: ChatTask[] = []): Promise<string> {
+const tools: Anthropic.Tool[] = [
+  {
+    name: 'create_task',
+    description: 'Create a new task for the project. Use this when the user asks to create, add, or generate tasks.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { 
+          type: 'string', 
+          description: 'The title of the task' 
+        },
+        description: { 
+          type: 'string', 
+          description: 'A brief description of what the task involves' 
+        }
+      },
+      required: ['title']
+    }
+  }
+]
+
+export async function chat(question: string, contexts: ChatContext[], tasks: ChatTask[] = [], projectId: string): Promise<string> {
   // Build context section from retrieved documents
   const contextText = contexts.length > 0
     ? contexts.map((ctx, i) => `[${i + 1}] ${ctx.title}\n${ctx.content}`).join('\n\n---\n\n')
@@ -27,34 +49,80 @@ export async function chat(question: string, contexts: ChatContext[], tasks: Cha
     : 'No active tasks.'
 
   const systemPrompt = `You are a helpful assistant for a project knowledge base. 
-Your role is to answer questions based ONLY on the provided context and tasks from the project.
+    Your role is to answer questions based ONLY on the provided context and tasks from the project.
 
-IMPORTANT RULES:
-1. Only use information from the provided context and tasks to answer questions
-2. If the context doesn't contain relevant information, clearly say "I don't have information about that in the current project data"
-3. When answering, reference which piece of context you're using when helpful
-4. Be concise but thorough
-5. If asked about something not in the context, don't make up information
-6. When asked about tasks, refer to the active tasks list
-7. You can help prioritize, summarize, or explain tasks based on the project context
+    IMPORTANT RULES:
+    1. Only use information from the provided context and tasks to answer questions
+    2. If the context doesn't contain relevant information, clearly say "I don't have information about that in the current project data"
+    3. When answering, reference which piece of context you're using when helpful
+    4. Be concise but thorough
+    5. If asked about something not in the context, don't make up information
+    6. When asked about tasks, refer to the active tasks list
+    7. You can help prioritize, summarize, or explain tasks based on the project context
+    8. You can use the tools to create new tasks
 
-PROJECT CONTEXT:
-${contextText}
+    PROJECT CONTEXT:
+    ${contextText}
 
-ACTIVE TASKS:
-${tasksText}`
+    ACTIVE TASKS:
+    ${tasksText}
 
-  const response = await anthropic.messages.create({
+    TOOL USAGE:
+    When using a tool, you must use the tool name and parameters exactly as specified. Do not use any other text or formatting.
+    When using a tool, you must return the result of the tool in the format specified by the tool.
+    If you use a tool, you should say so in the response.
+    `
+
+  const messages: Anthropic.MessageParam[] = [
+    { role: 'user', content: question }
+  ]
+
+  let response = await anthropic.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1024,
     system: systemPrompt,
-    messages: [
-      { role: 'user', content: question }
-    ]
+    tools,
+    messages
   })
 
-  // Extract text from response
-  const textBlock = response.content.find(block => block.type === 'text')
-  return textBlock ? textBlock.text : 'Sorry, I could not generate a response.'
+  while (response.stop_reason === 'tool_use') {
+    const toolUseBlocks = response.content.filter(
+      (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
+    )
+
+    const toolResults: Anthropic.ToolResultBlockParam[] = []
+
+    for (const toolUse of toolUseBlocks) {
+      const { success, message } = await executeAIAction(toolUse.name, toolUse.input, projectId)
+  
+
+      toolResults.push({
+        type: 'tool_result',
+        tool_use_id: toolUse.id,
+        content: success 
+          ? `Successfully executed tool: ${toolUse.name}` 
+          : `Failed to execute ${toolUse.name}: ${message}`
+      })
+
+    }
+
+    messages.push({ role: 'assistant', content: response.content })
+    messages.push({ role: 'user', content: toolResults })
+
+    response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: systemPrompt,
+      tools,
+      messages
+    })
+  } 
+
+
+  const finalTextBlock = response.content.find(
+    (block): block is Anthropic.TextBlock => block.type === 'text'
+  )
+  
+  return finalTextBlock?.text ?? 'Sorry, I could not generate a response.'
 }
 
