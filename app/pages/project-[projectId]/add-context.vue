@@ -78,6 +78,7 @@ const handleSubmit = async () => {
 }
 
 const getContext = async () => {
+  if(!contextId.value) return
   const response = await $fetch<IContext | null>('/api/getContext', {
     method: 'GET',
     query: {
