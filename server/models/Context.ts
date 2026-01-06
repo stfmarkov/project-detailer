@@ -6,6 +6,9 @@ export interface IContext extends Document<ObjectId> {
   title: string
   content: string
   embedding: number[]
+  fileId?: string      // UUID to group chunks from same file
+  fileName?: string    // Original file name
+  chunkIndex?: number  // Order of chunk within file
   createdAt: Date
   updatedAt: Date
 }
@@ -29,6 +32,19 @@ const ContextSchema = new Schema<IContext>(
       type: [Number],
       required: true,
       // voyage-2 produces 1024-dimensional vectors
+    },
+    fileId: {
+      type: String,
+      required: false,
+      index: true
+    },
+    fileName: {
+      type: String,
+      required: false
+    },
+    chunkIndex: {
+      type: Number,
+      required: false
     }
   },
   {

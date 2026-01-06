@@ -15,6 +15,10 @@ const projectId = computed(() => route.params.projectId as string)
 
 const chatLink = computed(() => `/project-${projectId.value}/chat`)
 const addContextLink = computed(() => `/project-${projectId.value}/add-context`)
+const addFileLink = computed(() => `/project-${projectId.value}/add-file`)
+
+const isAddFilePage = computed(() => route.path.includes('/add-file'))
+const isAddContextPage = computed(() => route.path.includes('/add-context'))
 
 </script>
 
@@ -27,7 +31,8 @@ const addContextLink = computed(() => `/project-${projectId.value}/add-context`)
         <NuxtLink :to="`/project-${projectId}/tasks`" v-if="!isTasksPage" class="nav-link">Tasks</NuxtLink>
 
         <NuxtLink v-if="!isChatPage" :to="chatLink" class="nav-link">Chat</NuxtLink>
-        <NuxtLink v-if="isChatPage" :to="addContextLink" class="nav-link">+ Add Context</NuxtLink>
+        <NuxtLink v-if="!isAddContextPage" :to="addContextLink" class="nav-link">+ Add Context</NuxtLink>
+        <NuxtLink v-if="!isAddFilePage" :to="addFileLink" class="nav-link">+ Add File</NuxtLink>
     </nav>
 </template>
 

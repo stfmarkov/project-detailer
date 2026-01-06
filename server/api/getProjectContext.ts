@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
     try {
         await connectToMongoDB()
 
-        const context = await Context.find({ projectId }, '-__v -createdAt -updatedAt -embedding', { lean: true })
+        const context = await Context.find({ projectId, fileId: { $exists: false } }, '-__v -createdAt -updatedAt -embedding', { lean: true })
 
         return {
             success: true,

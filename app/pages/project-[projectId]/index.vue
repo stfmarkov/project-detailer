@@ -59,6 +59,15 @@ onMounted(async () => {
                     </div>
                     <span class="action-arrow">→</span>
                 </Card>
+
+                <Card :to="`/project-${projectId}/add-file`">
+                    <span class="action-icon">📂</span>
+                    <div class="action-content">
+                        <span class="action-title">Add File</span>
+                        <span class="action-desc">Add a file to your project</span>
+                    </div>
+                    <span class="action-arrow">→</span>
+                </Card>
                 
                 <Card :to="`/project-${projectId}/context`">
                     <span class="action-icon">📚</span>
