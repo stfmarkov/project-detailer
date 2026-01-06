@@ -114,7 +114,7 @@ const createProject = () => {
 
 .projects-grid {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
