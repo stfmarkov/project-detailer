@@ -3,6 +3,8 @@
     <NuxtRouteAnnouncer />
     <!-- <NuxtPage /> -->
     <NuxtLayout>
+      <drawer-menu />
+
       <NuxtPage />
     </NuxtLayout>
   </div>

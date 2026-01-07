@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { IProject } from '../../../server/models/Project'
+import { useGlobalStore } from '../../store/global'
 
+const globalStore = useGlobalStore()
 definePageMeta({
   layout: 'project'
 })
@@ -73,13 +75,13 @@ const clearChat = () => {
 }
 
 onMounted(async () => {
+  globalStore.setDrawerChild('ChatSidebar')
   project.value = await $fetch<IProject | null>('/api/getProject', {
     method: 'GET',
     query: {
       projectId: projectId.value
     }
   })
-  console.log(project.value)
 })
 </script>
 
