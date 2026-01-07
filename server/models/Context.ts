@@ -13,6 +13,14 @@ export interface IContext extends Document<ObjectId> {
   updatedAt: Date
 }
 
+export interface IFile extends Document<ObjectId> {
+  fileId: string
+  projectId: string
+  fileName: string
+  chunksCount: number
+  createdAt: Date
+}
+
 const ContextSchema = new Schema<IContext>(
   {
     projectId: {

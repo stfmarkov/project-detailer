@@ -15,12 +15,50 @@ export default defineEventHandler(async (event) => {
     try {
         await connectToMongoDB()
 
-        const context = await Context.find({ projectId, fileId: { $exists: false } }, '-__v -createdAt -updatedAt -embedding', { lean: true })
+        const context = await Context.find(
+            {
+                projectId,
+                fileId: { $exists: false }
+            },
+            '-__v -embedding',
+            { lean: true }
+        )
+
+        // Get unique files by aggregating on fileId
+        const files = await Context.aggregate([
+            { 
+                $match: { 
+                    projectId, 
+                    fileId: { $exists: true, $ne: null } 
+                } 
+            },
+            {
+                $group: {
+                    _id: '$fileId',
+                    fileName: { $first: '$fileName' },
+                    chunksCount: { $sum: 1 },
+                    createdAt: { $min: '$createdAt' }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    fileId: '$_id',
+                    fileName: 1,
+                    chunksCount: 1,
+                    createdAt: 1
+                }
+            },
+            { $sort: { createdAt: -1 } }
+        ])
 
         return {
             success: true,
             message: 'Context fetched successfully',
-            data: context
+            data: {
+                context,
+                files
+            }
         }
     } catch (error: any) {
         console.error('Error fetching context:', error)
