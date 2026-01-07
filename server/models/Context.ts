@@ -13,7 +13,18 @@ export interface IContext extends Document<ObjectId> {
   updatedAt: Date
 }
 
-export interface IFile extends Document<ObjectId> {
+export interface IContextPoint {
+  _id: string
+  projectId: string
+  title: string
+  content: string
+  embedding: number[]
+  fileId?: string
+  fileName?: string
+  chunkIndex?: number
+}
+
+export interface IFile {
   fileId: string
   projectId: string
   fileName: string
