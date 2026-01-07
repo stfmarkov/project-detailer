@@ -53,9 +53,34 @@ const processFile = async (file: File) => {
   // Check if it's a text-based file
   const extension = '.' + file.name.split('.').pop()?.toLowerCase()
   const isTextFile = acceptedTypes.includes(extension);
+  const isPdfFile = extension === '.pdf'
 
   if (!isTextFile) {
     message.value = { type: 'error', text: 'Please select a supported file (.txt, .pdf, .md)' }
+    return
+  }
+
+  if (isPdfFile) {
+    try {
+      // Convert PDF to base64 and send to server for parsing
+      const arrayBuffer = await file.arrayBuffer()
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      )
+      
+      const result = await $fetch<{ text: string }>('/api/parsePdf', {
+        method: 'POST',
+        body: { pdfBase64: base64 }
+      })
+
+      selectedFile.value = file
+      form.fileName = file.name
+      form.content = result.text
+      message.value = null
+    } catch (error: any) {
+      console.error('PDF parsing error:', error)
+      message.value = { type: 'error', text: error.data?.statusMessage || 'Failed to parse PDF file' }
+    }
     return
   }
 
