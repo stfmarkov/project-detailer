@@ -9,8 +9,48 @@ export interface Chunk {
 }
 
 /**
- * Splits text into overlapping chunks based on paragraphs.
- * Each paragraph becomes a chunk, with overlap from the previous paragraph.
+ * Checks if a block of text is a list item (bullet or numbered)
+ */
+function isListItem(text: string): boolean {
+  const trimmed = text.trim()
+  // Bullet lists: -, *, +
+  // Numbered lists: 1., 2., etc.
+  return /^[-*+]\s/.test(trimmed) || /^\d+\.\s/.test(trimmed)
+}
+
+/**
+ * Merges consecutive list items into single blocks.
+ * Keeps lists together as semantic units.
+ */
+function mergeListBlocks(paragraphs: string[]): string[] {
+  const merged: string[] = []
+  let currentList: string[] = []
+
+  for (const paragraph of paragraphs) {
+    if (isListItem(paragraph)) {
+      // Add to current list
+      currentList.push(paragraph)
+    } else {
+      // Not a list item - flush any accumulated list first
+      if (currentList.length > 0) {
+        merged.push(currentList.join('\n\n'))
+        currentList = []
+      }
+      merged.push(paragraph)
+    }
+  }
+
+  // Don't forget to flush any remaining list at the end
+  if (currentList.length > 0) {
+    merged.push(currentList.join('\n\n'))
+  }
+
+  return merged
+}
+
+/**
+ * Splits text into overlapping chunks based on semantic blocks.
+ * Keeps paragraphs and lists together, with overlap from previous block.
  */
 export function chunkText(text: string, options: ChunkOptions = {}): Chunk[] {
   const { maxChunkSize = 2000, overlapSize = 200 } = options
@@ -24,34 +64,37 @@ export function chunkText(text: string, options: ChunkOptions = {}): Chunk[] {
     .map(p => p.trim())
     .filter(p => p.length > 0)
 
-  // If no paragraphs or single paragraph that fits, return as single chunk
-  if (paragraphs.length === 0) {
+  // Merge consecutive list items into single blocks
+  const blocks = mergeListBlocks(paragraphs)
+
+  // If no blocks or single block, return as single chunk
+  if (blocks.length === 0) {
     return []
   }
   
-  if (paragraphs.length === 1) {
-    return [{ content: paragraphs[0], index: 0 }]
+  if (blocks.length === 1) {
+    return [{ content: blocks[0], index: 0 }]
   }
 
   const chunks: Chunk[] = []
 
-  for (let i = 0; i < paragraphs.length; i++) {
-    const currentParagraph = paragraphs[i]
-    let chunkContent = currentParagraph
+  for (let i = 0; i < blocks.length; i++) {
+    const currentBlock = blocks[i]
+    let chunkContent = currentBlock
 
-    // Add overlap from previous paragraph (except for first chunk)
+    // Add overlap from previous block (except for first chunk)
     if (i > 0) {
-      const prevParagraph = paragraphs[i - 1]
+      const prevBlock = blocks[i - 1]
       
-      // If previous paragraph is smaller than overlapSize, take half of it
+      // If previous block is smaller than overlapSize, take half of it
       // Otherwise take the last overlapSize characters
-      const overlapLength = prevParagraph.length < overlapSize 
-        ? Math.floor(prevParagraph.length / 2)
+      const overlapLength = prevBlock.length < overlapSize 
+        ? Math.floor(prevBlock.length / 2)
         : overlapSize
       
       if (overlapLength > 0) {
-        const overlap = prevParagraph.slice(-overlapLength)
-        chunkContent = overlap + '\n\n' + currentParagraph
+        const overlap = prevBlock.slice(-overlapLength)
+        chunkContent = overlap + '\n\n' + currentBlock
       }
     }
 
