@@ -1,12 +1,13 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { generateEmbedding } from '../utils/embeddings'
-import { chat } from '../utils/claude'
+import { chat, generateTitle } from '../utils/claude'
 import { Context } from '../models/Context'
 import { Task } from '../models/Task'
+import { Conversation } from '../models/Conversation'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { projectId, question } = body
+  const { projectId, question, conversationId } = body
 
   if (!projectId || !question) {
     throw createError({
@@ -17,6 +18,20 @@ export default defineEventHandler(async (event) => {
 
   try {
     await connectToMongoDB()
+
+    let conversation = await Conversation.findOne({ projectId, conversationId })
+
+    if (!conversation) {
+      // Generate a title for the conversation
+      const title = await generateTitle(question)
+      
+      conversation = await Conversation.create({
+        projectId,
+        conversationId,
+        title,
+        messages: []
+      })
+    }
 
     // Generate embedding for the question
     const questionEmbedding = await generateEmbedding(question)
@@ -50,6 +65,10 @@ export default defineEventHandler(async (event) => {
 
     // Get answer from Claude using retrieved contexts and tasks
     const answer = await chat(question, results, tasks, projectId)
+
+    conversation.messages.push({ role: 'user', content: question })
+    conversation.messages.push({ role: 'assistant', content: answer })
+    await conversation.save()
 
     return {
       success: true,

@@ -2,6 +2,7 @@
 import type { IProject } from '../../../server/models/Project'
 import { useGlobalStore } from '../../store/global'
 
+
 const globalStore = useGlobalStore()
 definePageMeta({
   layout: 'project'
@@ -15,6 +16,7 @@ interface Message {
 
 const project = ref<IProject | null>(null)
 const route = useRoute()
+const router = useRouter()
 
 const projectId = computed(() => route.params.projectId as string)
 const question = ref('')
@@ -22,7 +24,28 @@ const messages = ref<Message[]>([])
 const isLoading = ref(false)
 const chatContainer = ref<HTMLElement | null>(null)
 
+const conversationId = ref(route.query.id as string)
+
+const loadConversation = async () => {
+  if (!conversationId.value) return
+  
+  try {
+    const conversation = await $fetch<{ messages: Message[] }>('/api/getConversation', {
+      query: { conversationId: conversationId.value }
+    })
+    messages.value = conversation.messages
+    scrollToBottom()
+  } catch (error) {
+    console.error('Failed to load conversation:', error)
+  }
+}
+
 const sendMessage = async () => {
+  if (!conversationId.value) {
+    conversationId.value = crypto.randomUUID()
+    router.replace({ query: { id: conversationId.value } })
+  }
+
   if (!projectId.value.trim() || !question.value.trim() || isLoading.value) return
 
   const userQuestion = question.value
@@ -42,7 +65,8 @@ const sendMessage = async () => {
       method: 'POST',
       body: {
         projectId: projectId.value,
-        question: userQuestion
+        question: userQuestion,
+        conversationId: conversationId.value
       }
     })
 
@@ -72,6 +96,7 @@ const scrollToBottom = () => {
 
 const clearChat = () => {
   messages.value = []
+  router.replace({ query: { id: undefined } })
 }
 
 onMounted(async () => {
@@ -82,12 +107,30 @@ onMounted(async () => {
       projectId: projectId.value
     }
   })
+  
+  // Load existing conversation if id is provided
+  await loadConversation()
+})
+
+// Watch for conversation changes (when clicking different conversations in sidebar)
+watch(() => route.query.id, async (newId) => {
+  // Clear messages first
+  messages.value = []
+  
+  if (newId) {
+    // Loading existing conversation
+    conversationId.value = newId as string
+    await loadConversation()
+  } else {
+    // Starting fresh - new conversation
+    conversationId.value = ''
+  }
 })
 </script>
 
 <template>
   <ProjectHeader :title="project?.title || 'Project Detailer'" subtitle="Ask questions about your project" />
-  
+
 
   <div class="chat-area">
     <div ref="chatContainer" class="messages">

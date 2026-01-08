@@ -23,13 +23,13 @@ const tools: Anthropic.Tool[] = [
     input_schema: {
       type: 'object',
       properties: {
-        title: { 
-          type: 'string', 
-          description: 'The title of the task' 
+        title: {
+          type: 'string',
+          description: 'The title of the task'
         },
-        description: { 
-          type: 'string', 
-          description: 'A brief description of what the task involves' 
+        description: {
+          type: 'string',
+          description: 'A brief description of what the task involves'
         }
       },
       required: ['title']
@@ -37,7 +37,22 @@ const tools: Anthropic.Tool[] = [
   }
 ]
 
-export async function chat(question: string, contexts: ChatContext[], tasks: ChatTask[] = [], projectId: string): Promise<string> {
+const generateTitle = async (question: string) => {
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1024,
+    system: `
+      You are a helpful assistant that generates titles for project conversations. 
+      The title should be a single sentence that captures the main idea of the question provided by the user.
+      The title should be no more than 10 words.
+      The title should be in the same context as the question.
+    `,
+    messages: [{ role: 'user', content: question }]
+  })
+  return (response.content[0] as Anthropic.TextBlock).text
+}
+
+const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[] = [], projectId: string): Promise<string> => {
   // Build context section from retrieved documents
   const contextText = contexts.length > 0
     ? contexts.map((ctx, i) => `[${i + 1}] ${ctx.title}\n${ctx.content}`).join('\n\n---\n\n')
@@ -94,13 +109,13 @@ export async function chat(question: string, contexts: ChatContext[], tasks: Cha
 
     for (const toolUse of toolUseBlocks) {
       const { success, message } = await executeAIAction(toolUse.name, toolUse.input, projectId)
-  
+
 
       toolResults.push({
         type: 'tool_result',
         tool_use_id: toolUse.id,
-        content: success 
-          ? `Successfully executed tool: ${toolUse.name}` 
+        content: success
+          ? `Successfully executed tool: ${toolUse.name}`
           : `Failed to execute ${toolUse.name}: ${message}`
       })
 
@@ -116,13 +131,14 @@ export async function chat(question: string, contexts: ChatContext[], tasks: Cha
       tools,
       messages
     })
-  } 
+  }
 
 
   const finalTextBlock = response.content.find(
     (block): block is Anthropic.TextBlock => block.type === 'text'
   )
-  
+
   return finalTextBlock?.text ?? 'Sorry, I could not generate a response.'
 }
 
+export { chat, generateTitle }
