@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { executeAIAction } from '../services/executeAIAction'
+import { Conversation, type IMessage } from '../models/Conversation'
 
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY
@@ -52,7 +53,7 @@ const generateTitle = async (question: string) => {
   return (response.content[0] as Anthropic.TextBlock).text
 }
 
-const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[] = [], projectId: string): Promise<string> => {
+const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[] = [], projectId: string, conversationId: string): Promise<string> => {
   // Build context section from retrieved documents
   const contextText = contexts.length > 0
     ? contexts.map((ctx, i) => `[${i + 1}] ${ctx.title}\n${ctx.content}`).join('\n\n---\n\n')
@@ -62,6 +63,11 @@ const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[]
   const tasksText = tasks.length > 0
     ? tasks.map(t => `- [${t.status.toUpperCase()}] ${t.title}${t.description ? `: ${t.description}` : ''}`).join('\n')
     : 'No active tasks.'
+
+
+  // Fetch conversation history
+  const conversation = await Conversation.findOne({ conversationId })
+  const conversationHistory = conversation?.messages || []
 
   const systemPrompt = `You are a helpful assistant for a project knowledge base. 
     Your role is to answer questions based ONLY on the provided context and tasks from the project.
@@ -88,7 +94,14 @@ const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[]
     If you use a tool, you should say so in the response.
     `
 
+  // Build messages array with conversation history
   const messages: Anthropic.MessageParam[] = [
+    // Add previous messages from conversation history
+    ...conversationHistory.map((msg: IMessage) => ({
+      role: msg.role as 'user' | 'assistant',
+      content: msg.content
+    })),
+    // Add current question
     { role: 'user', content: question }
   ]
 
