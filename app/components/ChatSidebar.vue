@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { IConversationListItem } from '../../server/models/Conversation'
+import { useConversationsStore } from '../store/conversations'
 
 const projectId = useRoute().params.projectId
 const route = useRoute()
-const conversations = ref<IConversationListItem[]>([])
+const conversationsStore = useConversationsStore()
+const conversations = computed(() => conversationsStore.conversations)
 const router = useRouter()
 
 // Editing state
@@ -23,7 +25,8 @@ const formatDate = (date: Date) => {
 }
 
 const fetchConversations = async () => {
-    conversations.value = await $fetch<IConversationListItem[]>(`/api/getConversations?projectId=${projectId}`)
+    if (!projectId) return
+    await conversationsStore.getConversations(projectId.toString())
 }
 
 const createNewConversation = () => {
@@ -53,15 +56,13 @@ const saveTitle = async (conversationId: string, event: Event) => {
     }
 
     try {
-        await $fetch('/api/updateConversation', {
-            method: 'POST',
-            body: { conversationId, title: editingTitle.value }
-        })
+        await conversationsStore.updateConversation(conversationId, editingTitle.value)
         await fetchConversations()
     } catch (error) {
         console.error('Failed to update title:', error)
+    } finally {
+        cancelEditing()
     }
-    cancelEditing()
 }
 
 const deleteConversation = async (conversationId: string, event: Event) => {
@@ -71,19 +72,12 @@ const deleteConversation = async (conversationId: string, event: Event) => {
     if (!confirm('Delete this conversation?')) return
 
     try {
-        await $fetch('/api/deleteConversation', {
-            method: 'POST',
-            body: { conversationId }
-        })
-        
-        // If we're viewing the deleted conversation, navigate away
-        if (route.query.id === conversationId) {
-            router.push(`/project-${projectId}/chat`)
-        }
-        
+        await conversationsStore.deleteConversation(conversationId)
         await fetchConversations()
     } catch (error) {
         console.error('Failed to delete conversation:', error)
+    } finally {
+        cancelEditing()
     }
 }
 
@@ -98,10 +92,7 @@ const archiveConversation = async (conversationId: string, event: Event) => {
     archivingId.value = conversationId
 
     try {
-        const result = await $fetch<{ message: string; data: { contexts: Array<{ title: string }> } }>('/api/extractConversationContext', {
-            method: 'POST',
-            body: { conversationId, deleteAfter: true }
-        })
+        const result = await conversationsStore.extractConversationContext(conversationId, true)
         
         alert(result.message)
         

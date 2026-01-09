@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import type { IProject } from '../../../server/models/Project'
 import { useGlobalStore } from '../../store/global'
-
+import { useConversationsStore } from '../../store/conversations'
+import { useProjectsStore } from '../../store/projects'
 
 const globalStore = useGlobalStore()
+const conversationsStore = useConversationsStore()
+const projectsStore = useProjectsStore()
+
 definePageMeta({
   layout: 'project'
 })
@@ -14,7 +17,7 @@ interface Message {
   sources?: Array<{ title: string; score: number }>
 }
 
-const project = ref<IProject | null>(null)
+const project = computed(() => projectsStore.currentProject)
 const route = useRoute()
 const router = useRouter()
 
@@ -26,17 +29,22 @@ const chatContainer = ref<HTMLElement | null>(null)
 
 const conversationId = ref(route.query.id as string)
 
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (chatContainer.value) {
+      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+    }
+  })
+}
+
 const loadConversation = async () => {
   if (!conversationId.value) return
-  
+
   try {
-    const conversation = await $fetch<{ messages: Message[] }>('/api/getConversation', {
-      query: { conversationId: conversationId.value }
-    })
-    messages.value = conversation.messages
+    await conversationsStore.getConversation(conversationId.value)
+    messages.value = conversationsStore.conversation?.messages || []
     scrollToBottom()
   } catch (error) {
-    console.error('Failed to load conversation:', error)
   }
 }
 
@@ -61,19 +69,12 @@ const sendMessage = async () => {
   scrollToBottom()
 
   try {
-    const response = await $fetch('/api/chat', {
-      method: 'POST',
-      body: {
-        projectId: projectId.value,
-        question: userQuestion,
-        conversationId: conversationId.value
-      }
-    })
+    const response = await conversationsStore.sendMessage(projectId.value, userQuestion, conversationId.value)
 
     messages.value.push({
       role: 'assistant',
       content: response.answer,
-      sources: response.sources as Array<{ title: string; score: number }>
+      sources: response.sources
     })
   } catch (error: any) {
     messages.value.push({
@@ -86,14 +87,6 @@ const sendMessage = async () => {
   }
 }
 
-const scrollToBottom = () => {
-  nextTick(() => {
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-    }
-  })
-}
-
 const clearChat = () => {
   messages.value = []
   router.replace({ query: { id: undefined } })
@@ -101,13 +94,8 @@ const clearChat = () => {
 
 onMounted(async () => {
   globalStore.setDrawerChild('ChatSidebar')
-  project.value = await $fetch<IProject | null>('/api/getProject', {
-    method: 'GET',
-    query: {
-      projectId: projectId.value
-    }
-  })
-  
+  await projectsStore.getProject(projectId.value)
+
   // Load existing conversation if id is provided
   await loadConversation()
 })
@@ -116,7 +104,7 @@ onMounted(async () => {
 watch(() => route.query.id, async (newId) => {
   // Clear messages first
   messages.value = []
-  
+
   if (newId) {
     // Loading existing conversation
     conversationId.value = newId as string
@@ -126,6 +114,7 @@ watch(() => route.query.id, async (newId) => {
     conversationId.value = ''
   }
 })
+
 </script>
 
 <template>
