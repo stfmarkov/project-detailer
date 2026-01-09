@@ -9,6 +9,7 @@ definePageMeta({
 
 const tasksStore = useTasksStore()
 const projectsStore = useProjectsStore()
+const router = useRouter()
 
 const route = useRoute()
 const projectId = computed(() => route.params.projectId as string)
@@ -17,22 +18,6 @@ const projectTitle = computed(() => projectsStore.currentProject?.title)
 // Tasks state
 const tasks = computed(() => tasksStore.tasks)
 const isLoading = ref(true)
-
-// Add task form
-const showAddForm = ref(false)
-const newTask = reactive({
-    title: '',
-    description: ''
-})
-const isAdding = ref(false)
-
-// Edit state
-const editingTaskId = ref<string | null>(null)
-const editForm = reactive({
-    title: '',
-    description: ''
-})
-const isEditing = ref(false)
 
 // Load project and tasks
 onMounted(async () => {
@@ -51,75 +36,22 @@ async function loadTasks() {
     }
 }
 
-// Add task
-async function addTask() {
-    if (!newTask.title.trim()) return
-    
-    isAdding.value = true
-    try {
-        await tasksStore.addTask({
-            projectId: projectId.value,
-            title: newTask.title,
-            description: newTask.description
-        })
-        newTask.title = ''
-        newTask.description = ''
-        showAddForm.value = false
-        await loadTasks()
-    } catch (error) {
-        console.error('Failed to add task:', error)
-    } finally {
-        isAdding.value = false
-    }
+// Navigate to add/edit page
+function goToAddTask() {
+    router.push(`/project-${projectId.value}/add-task`)
 }
 
-// Start editing
-function startEdit(task: ITaskItem) {
-    editingTaskId.value = task._id.toString()
-    editForm.title = task.title
-    editForm.description = task.description
-}
-
-// Cancel editing
-function cancelEdit() {
-    editingTaskId.value = null
-    editForm.title = ''
-    editForm.description = ''
-}
-
-// Save edit
-async function saveEdit(taskId: string) {
-    if (!editForm.title.trim()) return
-    
-    isEditing.value = true
-    try {
-        await $fetch('/api/editTask', {
-            method: 'POST',
-            body: {
-                taskId,
-                title: editForm.title,
-                description: editForm.description
-            }
-        })
-        cancelEdit()
-        await loadTasks()
-    } catch (error) {
-        console.error('Failed to edit task:', error)
-    } finally {
-        isEditing.value = false
-    }
+function goToEditTask(taskId: string) {
+    router.push(`/project-${projectId.value}/add-task?taskId=${taskId}`)
 }
 
 // Toggle status
 async function toggleStatus(task: ITaskItem) {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed'
     try {
-        await $fetch('/api/editTask', {
-            method: 'POST',
-            body: {
-                taskId: task._id.toString(),
-                status: newStatus
-            }
+        await tasksStore.editTask({
+            taskId: task._id.toString(),
+            status: newStatus
         })
         await loadTasks()
     } catch (error) {
@@ -132,10 +64,7 @@ async function deleteTask(taskId: string) {
     if (!confirm('Are you sure you want to delete this task?')) return
     
     try {
-        await $fetch('/api/deleteTask', {
-            method: 'POST',
-            body: { taskId }
-        })
+        await tasksStore.deleteTask(taskId)
         await loadTasks()
     } catch (error) {
         console.error('Failed to delete task:', error)
@@ -147,38 +76,11 @@ async function deleteTask(taskId: string) {
     <ProjectHeader :title="projectTitle || 'Project Detailer'" subtitle="Project Tasks" />
 
     <div class="tasks-page">
-        <!-- Add Task Button / Form -->
+        <!-- Add Task Button -->
         <div class="add-section">
-            <button v-if="!showAddForm" class="add-btn" @click="showAddForm = true">
+            <button class="add-btn" @click="goToAddTask">
                 + Add Task
             </button>
-            
-            <div v-else class="add-form">
-                <input
-                    v-model="newTask.title"
-                    type="text"
-                    placeholder="Task title..."
-                    class="input"
-                    :disabled="isAdding"
-                    @keyup.enter="addTask"
-                    autofocus
-                />
-                <textarea
-                    v-model="newTask.description"
-                    placeholder="Description (optional)..."
-                    class="textarea"
-                    :disabled="isAdding"
-                    rows="2"
-                />
-                <div class="form-actions">
-                    <button class="cancel-btn" @click="showAddForm = false" :disabled="isAdding">
-                        Cancel
-                    </button>
-                    <button class="save-btn" @click="addTask" :disabled="isAdding || !newTask.title.trim()">
-                        {{ isAdding ? 'Adding...' : 'Add Task' }}
-                    </button>
-                </div>
-            </div>
         </div>
 
         <!-- Loading State -->
@@ -200,8 +102,7 @@ async function deleteTask(taskId: string) {
                 :key="task._id.toString()"
                 :inactive="task.status === 'completed'"
             >
-                <!-- View Mode -->
-                <div v-if="editingTaskId !== task._id.toString()" class="task-content">
+                <div class="task-content">
                     <button 
                         class="status-checkbox"
                         :class="{ checked: task.status === 'completed' }"
@@ -216,41 +117,11 @@ async function deleteTask(taskId: string) {
                     </div>
                     
                     <div class="task-actions">
-                        <button class="action-btn edit" @click="startEdit(task)" title="Edit">
+                        <button class="action-btn edit" @click="goToEditTask(task._id.toString())" title="Edit">
                             ✏️
                         </button>
                         <button class="action-btn delete" @click="deleteTask(task._id.toString())" title="Delete">
                             🗑️
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Edit Mode -->
-                <div v-else class="task-edit">
-                    <input
-                        v-model="editForm.title"
-                        type="text"
-                        class="input"
-                        :disabled="isEditing"
-                        @keyup.enter="saveEdit(task._id.toString())"
-                        autofocus
-                    />
-                    <textarea
-                        v-model="editForm.description"
-                        class="textarea"
-                        :disabled="isEditing"
-                        rows="2"
-                    />
-                    <div class="form-actions">
-                        <button class="cancel-btn" @click="cancelEdit" :disabled="isEditing">
-                            Cancel
-                        </button>
-                        <button 
-                            class="save-btn" 
-                            @click="saveEdit(task._id.toString())" 
-                            :disabled="isEditing || !editForm.title.trim()"
-                        >
-                            {{ isEditing ? 'Saving...' : 'Save' }}
                         </button>
                     </div>
                 </div>
@@ -295,84 +166,6 @@ async function deleteTask(taskId: string) {
     box-shadow: 0 4px 20px rgba(233, 69, 96, 0.4);
 }
 
-.add-form {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-/* Form Elements */
-.input,
-.textarea {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    color: #fff;
-    font-size: 0.95rem;
-    font-family: inherit;
-}
-
-.input::placeholder,
-.textarea::placeholder {
-    color: #606070;
-}
-
-.input:focus,
-.textarea:focus {
-    outline: none;
-    border-color: #e94560;
-}
-
-.textarea {
-    resize: vertical;
-    min-height: 60px;
-}
-
-.form-actions {
-    display: flex;
-    gap: 0.75rem;
-    justify-content: flex-end;
-}
-
-.cancel-btn {
-    padding: 0.5rem 1rem;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-    color: #a0a0b0;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-}
-
-.cancel-btn:hover:not(:disabled) {
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #e0e0e0;
-}
-
-.save-btn {
-    padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #e94560 0%, #c73e54 100%);
-    border: none;
-    border-radius: 6px;
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.save-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 /* Loading / Empty State */
 .loading {
     text-align: center;
@@ -410,13 +203,6 @@ async function deleteTask(taskId: string) {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-}
-
-.card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
-    transition: border-color 0.2s;
 }
 
 .task-content {
@@ -507,14 +293,6 @@ async function deleteTask(taskId: string) {
 
 .action-btn.delete:hover {
     background: rgba(255, 71, 87, 0.2);
-}
-
-/* Edit Mode */
-.task-edit {
-    padding: 1rem 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
 }
 
 /* Stats */
