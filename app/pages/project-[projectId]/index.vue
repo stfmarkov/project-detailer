@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import type { IProject } from '../../../server/models/Project'
 import { useRoute } from 'vue-router'
+import { useProjectsStore } from '@/store/projects'
 
 const route = useRoute()
+
+const projectsStore = useProjectsStore()
 
 definePageMeta({
     layout: 'project'
 })
 
 const projectId = computed(() => route.params.projectId as string)
-const projectTitle = ref('')
+const projectTitle = computed(() => projectsStore.currentProject?.title)
 
 onMounted(async () => {
-    const project = await $fetch<IProject>(`/api/getProject?projectId=${projectId.value}`)
-    projectTitle.value = project.title
+    await projectsStore.getProject(projectId.value)
 })
 
 </script>
@@ -96,17 +97,6 @@ onMounted(async () => {
                     <span class="action-arrow">→</span>
                 </Card>
             </div>
-        </div>
-
-        <!-- Project Info -->
-        <div class="info-section">
-            <h3 class="section-title">Project Info</h3>
-            <Card>
-                <div class="info-row">
-                    <span class="info-label">Project ID</span>
-                    <span class="info-value mono">{{ projectId }}</span>
-                </div>
-            </Card>
         </div>
     </div>
 </template>
@@ -212,33 +202,6 @@ onMounted(async () => {
 .card:hover .action-arrow {
     color: #e94560;
     transform: translateX(4px);
-}
-
-/* Info Section */
-.info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-}
-
-.info-label {
-    color: #808090;
-    font-size: 0.9rem;
-}
-
-.info-value {
-    color: #e0e0e0;
-    font-size: 0.9rem;
-}
-
-.info-value.mono {
-    font-family: 'SF Mono', 'Consolas', monospace;
-    color: #e94560;
-    background: rgba(233, 69, 96, 0.1);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.8rem;
 }
 
 /* Responsive */

@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import MainButton from '@/components/MainButton.vue'
-import type { IProject } from '../../../server/models/Project'
-import type { IContext } from '../../../server/models/Context'
+import { useContextStore } from '@/store/context'
+import { useProjectsStore } from '@/store/projects'
 
 definePageMeta({
   layout: 'project'
 })
 
+const contextStore = useContextStore()
+const projectsStore = useProjectsStore()
+
 const route = useRoute()
-const project = ref<IProject | null>(null)
+const project = computed(() => projectsStore.currentProject)
 
 const projectId = computed(() => route.params.projectId as string)
 const contextId = computed(() => route.query.contextId as string)
+
+const context = computed(() => contextStore.context)
 
 const form = reactive({
   projectId: projectId.value,
@@ -23,11 +28,7 @@ const isSubmitting = ref(false)
 const message = ref<{ type: 'success' | 'error'; text: string } | null>(null)
 
 const addContext = async () => {
-
-  await $fetch('/api/addContext', {
-    method: 'POST',
-    body: form
-  })
+  await contextStore.addContext(form)
 
   message.value = { type: 'success', text: 'Context added successfully!' }
   form.title = ''
@@ -39,14 +40,9 @@ const editContext = async () => {
     message.value = { type: 'error', text: 'Context ID is required' }
     return
   }
-  await $fetch('/api/editContext', {
-    method: 'POST',
-    body: {
-      contextId: contextId.value,
-      title: form.title,
-      content: form.content
-    }
-  })
+
+  await contextStore.editContext({ contextId: contextId.value, title: form.title, content: form.content })
+
   message.value = { type: 'success', text: 'Context updated successfully!' }
   form.title = ''
   form.content = ''
@@ -77,31 +73,12 @@ const handleSubmit = async () => {
   }
 }
 
-const getContext = async () => {
-  if(!contextId.value) return
-  const response = await $fetch<IContext | null>('/api/getContext', {
-    method: 'GET',
-    query: {
-      contextId: contextId.value
-    }
-  })
-  form.title = response?.title || ''
-  form.content = response?.content || ''
-}
-
-const getProject = async () => {
-  const response = await $fetch<IProject | null>('/api/getProject', {
-    method: 'GET',
-    query: {
-      projectId: projectId.value
-    }
-  })
-  console.log(response)
-}
-
 onMounted(async () => {
-  await getProject()
-  await getContext()
+  if(!contextId.value) return
+  await contextStore.getContext(contextId.value)
+  await projectsStore.getProject(projectId.value)
+  form.title = context.value?.title || ''
+  form.content = context.value?.content || ''
 })
 </script>
 
@@ -211,24 +188,5 @@ onMounted(async () => {
   color: #707080;
   font-size: 0.8rem;
   margin-top: 0.4rem;
-}
-
-.message {
-  padding: 0.875rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-}
-
-.message.success {
-  background: rgba(46, 213, 115, 0.15);
-  border: 1px solid rgba(46, 213, 115, 0.3);
-  color: #2ed573;
-}
-
-.message.error {
-  background: rgba(255, 71, 87, 0.15);
-  border: 1px solid rgba(255, 71, 87, 0.3);
-  color: #ff4757;
 }
 </style>

@@ -1,24 +1,25 @@
 <script setup lang="ts">
-import type { IContextPoint, IFile } from '../../../server/models/Context'
-
+import { useContextStore } from '@/store/context'
+    
 definePageMeta({
     layout: 'project'
 })
+
+const contextStore = useContextStore()
 
 const route = useRoute()
 const router = useRouter()
 const projectId = computed(() => route.params.projectId as string)
 
-const context = ref<IContextPoint[]>([] as IContextPoint[])
-const files = ref<IFile[]>([] as IFile[])
+const context = computed(() => contextStore.contextItems)
+const files = computed(() => contextStore.files)
+
 const addContext = () => {
     router.push(`/project-${projectId.value}/add-context`)
 }
 
 const getContext = async () => {
-    const response = await $fetch<{ data: { context: IContextPoint[], files: IFile[] } }>(`/api/getProjectContext?projectId=${projectId.value}`)
-    context.value = response.data.context
-    files.value = response.data.files
+    await contextStore.getProjectContext(projectId.value)
 }
 
 const clearFile = async (id?: string) => {

@@ -8,6 +8,12 @@ export interface IProject extends Document<ObjectId> {
     updatedAt: Date
 }
 
+export interface IProjectListItem {
+    _id: string
+    title: string
+    category: string
+}
+
 const ProjectSchema = new Schema<IProject>({
     title: {
         type: String,

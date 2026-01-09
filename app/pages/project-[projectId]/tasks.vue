@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import type { IProject } from '../../../server/models/Project'
-import type { ITask } from '../../../server/models/Task'
+import { useTasksStore } from '@/store/tasks'
+import { useProjectsStore } from '@/store/projects'
+import type { ITaskItem } from '~~/server/models/Task'
 
 definePageMeta({
     layout: 'project'
 })
 
+const tasksStore = useTasksStore()
+const projectsStore = useProjectsStore()
+
 const route = useRoute()
 const projectId = computed(() => route.params.projectId as string)
-const projectTitle = ref('')
+const projectTitle = computed(() => projectsStore.currentProject?.title)
 
 // Tasks state
-const tasks = ref<ITask[]>([])
+const tasks = computed(() => tasksStore.tasks)
 const isLoading = ref(true)
 
 // Add task form
@@ -32,15 +36,14 @@ const isEditing = ref(false)
 
 // Load project and tasks
 onMounted(async () => {
-    const project = await $fetch<IProject>(`/api/getProject?projectId=${projectId.value}`)
-    projectTitle.value = project.title
+    await projectsStore.getProject(projectId.value)
     await loadTasks()
 })
 
 async function loadTasks() {
     isLoading.value = true
     try {
-        tasks.value = await $fetch<ITask[]>(`/api/getTasks?projectId=${projectId.value}`)
+        await tasksStore.getTasks(projectId.value)
     } catch (error) {
         console.error('Failed to load tasks:', error)
     } finally {
@@ -54,13 +57,10 @@ async function addTask() {
     
     isAdding.value = true
     try {
-        await $fetch('/api/addTask', {
-            method: 'POST',
-            body: {
-                projectId: projectId.value,
-                title: newTask.title,
-                description: newTask.description
-            }
+        await tasksStore.addTask({
+            projectId: projectId.value,
+            title: newTask.title,
+            description: newTask.description
         })
         newTask.title = ''
         newTask.description = ''
@@ -74,7 +74,7 @@ async function addTask() {
 }
 
 // Start editing
-function startEdit(task: ITask) {
+function startEdit(task: ITaskItem) {
     editingTaskId.value = task._id.toString()
     editForm.title = task.title
     editForm.description = task.description
@@ -111,7 +111,7 @@ async function saveEdit(taskId: string) {
 }
 
 // Toggle status
-async function toggleStatus(task: ITask) {
+async function toggleStatus(task: ITaskItem) {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed'
     try {
         await $fetch('/api/editTask', {
@@ -144,7 +144,7 @@ async function deleteTask(taskId: string) {
 </script>
 
 <template>
-    <ProjectHeader :title="projectTitle" subtitle="Project Tasks" />
+    <ProjectHeader :title="projectTitle || 'Project Detailer'" subtitle="Project Tasks" />
 
     <div class="tasks-page">
         <!-- Add Task Button / Form -->
@@ -187,7 +187,7 @@ async function deleteTask(taskId: string) {
         </div>
 
         <!-- Empty State -->
-        <div v-else-if="tasks.length === 0" class="empty-state">
+        <div v-else-if="tasks && tasks.length === 0" class="empty-state">
             <div class="empty-icon">✅</div>
             <h3>No tasks yet</h3>
             <p>Add your first task to get started</p>
@@ -258,7 +258,7 @@ async function deleteTask(taskId: string) {
         </div>
 
         <!-- Task Stats -->
-        <div v-if="tasks.length > 0" class="task-stats">
+        <div v-if="tasks && tasks.length > 0" class="task-stats">
             {{ tasks.filter(t => t.status === 'completed').length }} of {{ tasks.length }} completed
         </div>
     </div>

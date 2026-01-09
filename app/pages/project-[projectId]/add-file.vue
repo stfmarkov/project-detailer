@@ -181,9 +181,7 @@ onMounted(async () => {
     </MainButton>
 
     <!-- Message when no file -->
-    <div v-if="message && !selectedFile" :class="['message', message.type, 'standalone']">
-      {{ message.text }}
-    </div>
+    <MessageBox class="standalone" v-if="message && !selectedFile" :type="message.type" :message="message.text" />
   </div>
 </template>
 
@@ -265,26 +263,7 @@ onMounted(async () => {
   margin-top: 1.25rem;
 }
 
-.message {
-  padding: 0.875rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-}
-
 .message.standalone {
   margin-top: 0;
-}
-
-.message.success {
-  background: rgba(46, 213, 115, 0.15);
-  border: 1px solid rgba(46, 213, 115, 0.3);
-  color: #2ed573;
-}
-
-.message.error {
-  background: rgba(255, 71, 87, 0.15);
-  border: 1px solid rgba(255, 71, 87, 0.3);
-  color: #ff4757;
 }
 </style>

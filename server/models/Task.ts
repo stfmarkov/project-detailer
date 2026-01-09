@@ -1,13 +1,23 @@
 import mongoose, { Schema, Document, ObjectId } from 'mongoose'
 
+type TaskStatus = 'pending' | 'in_progress' | 'completed'
+
 export interface ITask extends Document<ObjectId> {
     _id: ObjectId
     projectId: string
     title: string
     description: string
-    status: 'pending' | 'in_progress' | 'completed'
+    status: TaskStatus
     createdAt: Date
     updatedAt: Date
+}
+
+export interface ITaskItem {
+    _id: string
+    projectId: string
+    title: string
+    description: string
+    status: TaskStatus
 }
 
 const TaskSchema = new Schema<ITask>({
