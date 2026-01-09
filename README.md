@@ -22,8 +22,10 @@ Traditional documentation gets buried. Wikis become outdated. Notes scatter acro
 Project Detailer lets you:
 
 1. **Create projects** — Organize your work into separate, focused spaces
-2. **Add details freely** — Use a simple form to capture any information, as brief or detailed as needed
-3. **Ask questions naturally** — Chat with your project using AI that *only* knows what you've documented
+2. **Add context freely** — Capture any information manually or upload documents
+3. **Manage tasks** — Track what needs to be done with AI-assisted task creation
+4. **Chat with your project** — Ask questions using AI that *only* knows what you've documented
+5. **Extract insights** — Archive conversations into searchable context entries
 
 The AI doesn't hallucinate or make things up. If something isn't in your project data, it tells you — keeping your source of truth reliable.
 
@@ -34,10 +36,14 @@ The AI doesn't hallucinate or make things up. If something isn't in your project
 | Feature | Description |
 |---------|-------------|
 | **Multi-project support** | Manage multiple projects, each with its own isolated knowledge base |
-| **Flexible detail entries** | Add anything: character descriptions, feature specs, meeting notes, design decisions |
-| **Vector-powered search** | Details are stored in a vector database for semantic understanding |
+| **Context entries** | Add anything: character descriptions, feature specs, meeting notes, design decisions |
+| **File uploads** | Upload .txt, .pdf, .md files — automatically chunked and embedded for search |
+| **Task management** | Create and track tasks manually or let AI create them from conversations |
+| **Vector-powered search** | Content stored with embeddings for semantic retrieval (RAG) |
 | **Contextual AI chat** | Ask questions and get answers grounded in your actual project data |
-| **Honest responses** | The AI clearly indicates when information isn't available in the project |
+| **Conversation history** | Resume past conversations, rename, or archive them |
+| **Extract to Context** | Turn conversation insights into permanent, searchable knowledge |
+| **Tool-enabled AI** | Claude can create tasks and context directly from chat |
 
 ---
 
@@ -55,14 +61,20 @@ The AI doesn't hallucinate or make things up. If something isn't in your project
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Add Details   │ ──▶ │   Vector DB     │ ──▶ │   AI Chat       │
-│   (Simple Form) │     │   (Storage)     │     │   (Query)       │
+│  Add Context    │ ──▶ │  Vector DB      │ ──▶ │   AI Chat       │
+│  Upload Files   │     │  (Embeddings)   │     │   (RAG Query)   │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
+         │                                              │
+         │              ┌─────────────────┐             │
+         └───────────── │     Tasks       │ ◀───────────┘
+                        │  (AI-created)   │
+                        └─────────────────┘
 ```
 
 1. **Create a project** for your book, app, game, or any endeavor
-2. **Add details** through a minimal form — describe characters, features, concepts
-3. **Chat with your project** — ask questions and get answers based solely on your data
+2. **Add context** through forms or file uploads
+3. **Chat with your project** — ask questions, create tasks
+4. **Archive conversations** — extract insights back into context
 
 ---
 
@@ -71,6 +83,11 @@ The AI doesn't hallucinate or make things up. If something isn't in your project
 ```bash
 # Install dependencies
 npm install
+
+# Set up environment variables
+# CLAUDE_API_KEY - Anthropic API key
+# MONGODB_URI - MongoDB connection string
+# VOYAGE_API_KEY - Voyage AI API key (for embeddings)
 
 # Run development server
 npm run dev
@@ -83,9 +100,37 @@ npm run build
 
 ## 🛠️ Tech Stack
 
-- **Framework:** Nuxt.js
-- **Database:** Vector DB (for semantic search & retrieval)
-- **AI:** LLM integration for conversational queries
+- **Framework:** Nuxt 4 (Vue 3)
+- **Database:** MongoDB with vector search
+- **AI:** Claude (Anthropic) for chat and tool use
+- **Embeddings:** Voyage AI for semantic search
+- **Styling:** Scoped CSS with dark theme
+
+---
+
+## 🔮 Future Plans
+
+### Project Templates
+When creating a project, select a project type (Software, Novel, Game, etc.). Based on the type, the project starts pre-populated with:
+- **Standard context entries** relevant to that project type
+- **Common tasks** to get started
+- **Suggested structure** for organizing information
+
+Users can customize, delete, or expand from this starting point.
+
+### Plan My Day
+A productivity feature for managing work across projects:
+- Click "Plan My Day" when starting work
+- AI analyzes your active tasks across all projects
+- Considers task priorities, deadlines, and project status
+- Suggests a focused list of tasks to tackle today
+- Helps prevent overwhelm and decision fatigue
+
+### Additional Ideas
+- **Collaboration** — Share projects with team members
+- **Export** — Generate documentation from project context
+- **Integrations** — Connect with external tools (GitHub, Notion, etc.)
+- **Mobile app** — Access your project knowledge on the go
 
 ---
 
