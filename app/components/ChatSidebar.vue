@@ -87,6 +87,38 @@ const deleteConversation = async (conversationId: string, event: Event) => {
     }
 }
 
+const archivingId = ref<string | null>(null)
+
+const archiveConversation = async (conversationId: string, event: Event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    
+    if (!confirm('Extract insights to Context and delete this conversation?')) return
+
+    archivingId.value = conversationId
+
+    try {
+        const result = await $fetch<{ message: string; data: { contexts: Array<{ title: string }> } }>('/api/extractConversationContext', {
+            method: 'POST',
+            body: { conversationId, deleteAfter: true }
+        })
+        
+        alert(result.message)
+        
+        // If we're viewing the archived conversation, navigate away
+        if (route.query.id === conversationId) {
+            router.push(`/project-${projectId}/chat`)
+        }
+        
+        await fetchConversations()
+    } catch (error: any) {
+        console.error('Failed to archive conversation:', error)
+        alert(error.data?.statusMessage || 'Failed to archive conversation')
+    } finally {
+        archivingId.value = null
+    }
+}
+
 onMounted(fetchConversations)
 </script>
 
@@ -151,6 +183,20 @@ onMounted(fetchConversations)
                         <span class="conversation-date">{{ formatDate(conversation.createdAt) }}</span>
                     </div>
                     <div class="conversation-actions">
+                        <button 
+                            class="action-btn archive" 
+                            :class="{ 'loading': archivingId === conversation.conversationId }"
+                            @click="archiveConversation(conversation.conversationId, $event)" 
+                            title="Archive to Context"
+                            :disabled="archivingId === conversation.conversationId"
+                        >
+                            <svg v-if="archivingId !== conversation.conversationId" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="21 8 21 21 3 21 3 8" />
+                                <rect x="1" y="3" width="22" height="5" />
+                                <line x1="10" y1="12" x2="14" y2="12" />
+                            </svg>
+                            <span v-else class="spinner"></span>
+                        </button>
                         <button class="action-btn edit" @click="startEditing(conversation, $event)" title="Rename">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -297,6 +343,35 @@ onMounted(fetchConversations)
 .action-btn.cancel:hover {
     background: rgba(255, 71, 87, 0.15);
     color: #ff4757;
+}
+
+.action-btn.archive:hover {
+    background: rgba(46, 213, 115, 0.15);
+    color: #2ed573;
+}
+
+.action-btn.loading {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+.action-btn:disabled {
+    pointer-events: none;
+}
+
+.spinner {
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-top-color: #2ed573;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .edit-input {
