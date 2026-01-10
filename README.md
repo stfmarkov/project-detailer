@@ -126,6 +126,18 @@ A productivity feature for managing work across projects:
 - Suggests a focused list of tasks to tackle today
 - Helps prevent overwhelm and decision fatigue
 
+### Image-Enabled Context
+Attach images to context entries for richer documentation:
+- **Visual references** — Associate concept art, diagrams, or screenshots with context
+- **AI-aware images** — When answering questions about relevant topics, show associated images
+- **Better comprehension** — See visual context alongside text explanations
+
+### Project Onboarding
+Guided setup when creating a new project:
+- **Step-by-step wizard** — Walk through essential project details
+- **Prompted context creation** — Suggest specific context entries to add (e.g., "Describe your main character" for novels, "Define your tech stack" for software)
+- **Quick start templates** — Pre-fill suggested titles and prompts to help users capture key information from the start
+
 ### Additional Ideas
 - **Collaboration** — Share projects with team members
 - **Export** — Generate documentation from project context
