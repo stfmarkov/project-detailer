@@ -98,7 +98,7 @@ async function handleSubmit() {
 
       <!-- Actions -->
       <div class="form-actions">
-        <button type="button" class="cancel-btn" @click="router.push('/projects')" :disabled="isSubmitting">
+        <button type="button" class="cancel-btn" @click="router.push('/')" :disabled="isSubmitting">
           Cancel
         </button>
         <button type="submit" class="submit-btn" :disabled="isSubmitting || !form.title || !form.category">

@@ -109,9 +109,7 @@ onMounted(async () => {
       />
     </div>
 
-    <div v-if="message" :class="['message', message.type]">
-      {{ message.text }}
-    </div>
+    <MessageBox v-if="message" :type="message.type" :message="message.text" />
 
     <MainButton :disabled="isSubmitting" @click="handleSubmit">
       <span v-if="isSubmitting">Adding...</span>
