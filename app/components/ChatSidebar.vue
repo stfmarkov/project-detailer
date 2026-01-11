@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { IConversationListItem } from '../../server/models/Conversation'
 import { useConversationsStore } from '../store/conversations'
-
+import { useGlobalStore } from '../store/global'
 const projectId = useRoute().params.projectId
 const route = useRoute()
+
+const globalStore = useGlobalStore()
 const conversationsStore = useConversationsStore()
 const conversations = computed(() => conversationsStore.conversations)
 const router = useRouter()
@@ -93,8 +95,10 @@ const archiveConversation = async (conversationId: string, event: Event) => {
 
     try {
         const result = await conversationsStore.extractConversationContext(conversationId, true)
+
+        if(!result) return
         
-        alert(result?.message || 'Failed to extract conversation context')
+        globalStore.setToast(result.message, 'success')
         
         // If we're viewing the archived conversation, navigate away
         if (route.query.id === conversationId) {
@@ -104,7 +108,6 @@ const archiveConversation = async (conversationId: string, event: Event) => {
         await fetchConversations()
     } catch (error: any) {
         console.error('Failed to archive conversation:', error)
-        alert(error.data?.statusMessage || 'Failed to archive conversation')
     } finally {
         archivingId.value = null
     }
