@@ -1,4 +1,5 @@
-import type { IProject, IProjectListItem } from "~~/server/models/Project"
+import type { IProjectListItem } from "~~/server/models/Project"
+import { handleRequest } from "./utils/handleRequest"
 
 interface ProjectsStoreState {
     projects: IProjectListItem[]
@@ -14,10 +15,16 @@ export const useProjectsStore = defineStore('projects', {
 
     actions: {
         async fetchProjects() {
-            this.projects = await $fetch<IProjectListItem[]>('/api/getAllProjects')
+            const projects = await handleRequest(() => $fetch<IProjectListItem[]>('/api/getAllProjects'))
+            if (projects) {
+                this.projects = projects
+            }
         },
         async getProject(projectId: string) {
-            this.currentProject = await $fetch<IProjectListItem>(`/api/getProject?projectId=${projectId}`)
+            const project = await handleRequest(() => $fetch<IProjectListItem>(`/api/getProject?projectId=${projectId}`))
+            if (project) {
+                this.currentProject = project
+            }
         }
     }
 })  

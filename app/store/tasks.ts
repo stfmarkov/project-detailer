@@ -1,4 +1,5 @@
 import type { ITaskItem } from "~~/server/models/Task"
+import { handleRequest } from "./utils/handleRequest"
 
 interface TasksStoreState {
     tasks: ITaskItem[]
@@ -12,28 +13,34 @@ export const useTasksStore = defineStore('tasks', {
     }),
     actions: {
         async getTasks(projectId: string) {
-            this.tasks = await $fetch<ITaskItem[]>(`/api/getTasks?projectId=${projectId}`)
+            const tasks = await handleRequest(() => $fetch<ITaskItem[]>(`/api/getTasks?projectId=${projectId}`))
+            if (tasks) {
+                this.tasks = tasks
+            }
         },
         async getTask(taskId: string) {
-            this.task = await $fetch<ITaskItem>(`/api/getTask?taskId=${taskId}`)
+            const task = await handleRequest(() => $fetch<ITaskItem>(`/api/getTask?taskId=${taskId}`))
+            if (task) {
+                this.task = task
+            }
         },
         async addTask(task: { projectId: string, title: string, description: string }) {
-            await $fetch('/api/addTask', {
+            return await handleRequest(() => $fetch('/api/addTask', {
                 method: 'POST',
                 body: task
-            })
+            }))
         },
         async editTask(task: { taskId: string, title?: string, description?: string, status?: string }) {
-            await $fetch('/api/editTask', {
+            return await handleRequest(() => $fetch('/api/editTask', {
                 method: 'POST',
                 body: task
-            })
+            }))
         },
         async deleteTask(taskId: string) {
-            await $fetch('/api/deleteTask', {
+            return await handleRequest(() => $fetch('/api/deleteTask', {
                 method: 'DELETE',
                 body: { taskId }
-            })
+            }))
         }
     }
 })

@@ -1,4 +1,5 @@
 import type { IConversation, IConversationListItem } from "~~/server/models/Conversation"
+import { handleRequest } from "./utils/handleRequest"
 
 type ConversationsStoreState = {
     conversations: IConversationListItem[]
@@ -11,38 +12,44 @@ export const useConversationsStore = defineStore('conversations', {
     }),
     actions: {
         async getConversations(projectId: string) {
-            this.conversations = await $fetch<IConversationListItem[]>('/api/getConversations', {
+            const conversations = await handleRequest(() => $fetch<IConversationListItem[]>('/api/getConversations', {
                 query: { projectId }
-            })
+            }))
+            if (conversations) {
+                this.conversations = conversations
+            }
         },
         async getConversation(conversationId: string) {
-            this.conversation = await $fetch('/api/getConversation', {
+            const conversation = await handleRequest(() => $fetch<IConversation>('/api/getConversation', {
                 query: { conversationId }
-            })
+            }))
+            if (conversation) {
+                this.conversation = conversation
+            }
         },
         async sendMessage(projectId: string, question: string, conversationId: string) {
-            return await $fetch<{ answer: string, sources: Array<{ title: string; score: number }> }>('/api/chat', {
+            return await handleRequest(() => $fetch<{ answer: string, sources: Array<{ title: string; score: number }> }>('/api/chat', {
                 method: 'POST',
                 body: { projectId, question, conversationId }
-            })
+            }))
         },  
         async updateConversation(conversationId: string, title: string) {
-            await $fetch('/api/updateConversation', {
+            return await handleRequest(() => $fetch('/api/updateConversation', {
                 method: 'POST',
                 body: { conversationId, title }
-            })
+            }))
         },
         async deleteConversation(conversationId: string) {
-            await $fetch('/api/deleteConversation', {
+            return await handleRequest(() => $fetch('/api/deleteConversation', {
                 method: 'POST',
                 body: { conversationId }
-            })
+            }))
         },
         async extractConversationContext(conversationId: string, deleteAfter: boolean) {
-            return await $fetch<{ message: string; data: { contexts: Array<{ title: string }> } }>('/api/extractConversationContext', {
+            return await handleRequest(() => $fetch<{ message: string; data: { contexts: Array<{ title: string }> } }>('/api/extractConversationContext', {
                 method: 'POST',
                 body: { conversationId, deleteAfter }
-            })
+            }))
         }
     }
 })

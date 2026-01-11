@@ -1,7 +1,7 @@
 <template>
   <div>
     <NuxtRouteAnnouncer />
-    <!-- <NuxtPage /> -->
+    <Toast />
     <NuxtLayout>
       <drawer-menu />
 
