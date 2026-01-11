@@ -1,6 +1,7 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { generateEmbedding } from '../utils/embeddings'
 import { Context } from '../models/Context'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
 
@@ -23,8 +24,11 @@ export default defineEventHandler(async (event) => {
     // Generate embedding from the content
     const embedding = await generateEmbedding(content)
 
+    const user = event.context.user as User
+
     // Save to database
     const context = await Context.create({
+      userId: user.id,
       projectId,
       title,
       content,

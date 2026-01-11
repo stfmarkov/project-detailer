@@ -1,6 +1,8 @@
+import type { User } from '@supabase/supabase-js'
+
 export default defineEventHandler(async (event) => {
     // User is attached by the auth middleware
-    const user = event.context.user
+    const user = event.context.user as User
 
     if (!user) {
         throw createError({

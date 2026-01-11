@@ -4,10 +4,12 @@ import { chat, generateTitle } from '../utils/claude'
 import { Context } from '../models/Context'
 import { Task } from '../models/Task'
 import { Conversation } from '../models/Conversation'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { projectId, question, conversationId } = body
+  const user = event.context.user as User
 
   if (!projectId || !question) {
     throw createError({
@@ -19,13 +21,14 @@ export default defineEventHandler(async (event) => {
   try {
     await connectToMongoDB()
 
-    let conversation = await Conversation.findOne({ projectId, conversationId })
+    let conversation = await Conversation.findOne({ projectId, conversationId, userId: user.id })
 
     if (!conversation) {
       // Generate a title for the conversation
       const title = await generateTitle(question)
       
       conversation = await Conversation.create({
+        userId: user.id,
         projectId,
         conversationId,
         title,
@@ -45,7 +48,7 @@ export default defineEventHandler(async (event) => {
           queryVector: questionEmbedding,
           numCandidates: 50,
           limit: 5,
-          filter: { projectId: projectId }
+          filter: { projectId: projectId, userId: user.id }
         }
       },
       {
@@ -60,6 +63,7 @@ export default defineEventHandler(async (event) => {
     // Fetch active tasks (pending and in_progress)
     const tasks = await Task.find({
       projectId,
+      userId: user.id,
       status: { $in: ['pending', 'in_progress'] }
     }).sort({ createdAt: -1 }).lean()
 

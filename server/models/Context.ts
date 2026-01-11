@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, ObjectId } from 'mongoose'
 
 export interface IContext extends Document<ObjectId> {
   _id: ObjectId
+  userId: string
   projectId: string
   title: string
   content: string
@@ -34,6 +35,11 @@ export interface IFile {
 
 const ContextSchema = new Schema<IContext>(
   {
+    userId: {
+      type: String,
+      required: true,
+      index: true
+    },
     projectId: {
       type: String,
       required: true,

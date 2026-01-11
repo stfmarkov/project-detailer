@@ -1,9 +1,11 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { Task } from '../models/Task'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event)
     const { projectId } = query
+    const user = event.context.user as User
 
     if (!projectId) {
         throw createError({
@@ -15,7 +17,7 @@ export default defineEventHandler(async (event) => {
     try {
         await connectToMongoDB()
 
-        const tasks = await Task.find({ projectId })
+        const tasks = await Task.find({ projectId, userId: user.id })
             .sort({ createdAt: -1 })
             .lean()
 

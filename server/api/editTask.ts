@@ -1,9 +1,11 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { Task } from '../models/Task'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { taskId, title, description, status } = body
+    const user = event.context.user as User
 
     if (!taskId) {
         throw createError({
@@ -20,8 +22,8 @@ export default defineEventHandler(async (event) => {
         if (description !== undefined) updateData.description = description
         if (status !== undefined) updateData.status = status
 
-        const task = await Task.findByIdAndUpdate(
-            taskId,
+        const task = await Task.findOneAndUpdate(
+            { _id: taskId, userId: user.id },
             updateData,
             { new: true }
         ).lean()

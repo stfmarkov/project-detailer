@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { connectToMongoDB } from '../utils/mongodb'
 import { Conversation, type IMessage } from '../models/Conversation'
 import { executeAIAction } from '../services/executeAIAction'
+import { User } from '@supabase/supabase-js'
 
 const anthropic = new Anthropic({
   apiKey: process.env.CLAUDE_API_KEY
@@ -31,6 +32,7 @@ const tools: Anthropic.Tool[] = [
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { conversationId, deleteAfter = false } = body
+  const user = event.context.user as User
 
   if (!conversationId) {
     throw createError({
@@ -43,7 +45,7 @@ export default defineEventHandler(async (event) => {
     await connectToMongoDB()
 
     // Fetch the conversation
-    const conversation = await Conversation.findOne({ conversationId })
+    const conversation = await Conversation.findOne({ conversationId, userId: user.id })
 
     if (!conversation) {
       throw createError({
@@ -103,7 +105,8 @@ After extracting all insights, provide a brief summary of what was saved.`
           const result = await executeAIAction(
             toolUse.name, 
             toolUse.input, 
-            conversation.projectId
+            conversation.projectId,
+            user.id
           )
 
           if (result.success) {
@@ -134,7 +137,7 @@ After extracting all insights, provide a brief summary of what was saved.`
 
     // Optionally delete the conversation
     if (deleteAfter && createdContexts.length > 0) {
-      await Conversation.deleteOne({ conversationId })
+      await Conversation.deleteOne({ conversationId, userId: user.id })
     }
 
     return {

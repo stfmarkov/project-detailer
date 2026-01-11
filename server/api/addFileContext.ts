@@ -2,6 +2,7 @@ import { connectToMongoDB } from '../utils/mongodb'
 import { generateEmbedding } from '../utils/embeddings'
 import { Context } from '../models/Context'
 import { chunkText, generateUUID } from '../utils/chunking'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -39,8 +40,11 @@ export default defineEventHandler(async (event) => {
         ? `${fileName} (part ${chunk.index + 1}/${chunks.length})`
         : fileName
 
+      const user = event.context.user as User
+
       const context = await Context.create({
         projectId,
+        userId: user.id,
         title,
         content: chunk.content,
         embedding,

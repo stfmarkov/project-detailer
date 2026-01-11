@@ -1,9 +1,11 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { Conversation } from '../models/Conversation'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { conversationId } = body
+    const user = event.context.user as User
 
     if (!conversationId) {
         throw createError({
@@ -15,7 +17,7 @@ export default defineEventHandler(async (event) => {
     try {
         await connectToMongoDB()
 
-        const result = await Conversation.deleteOne({ conversationId })
+        const result = await Conversation.deleteOne({ conversationId, userId: user.id })
 
         if (result.deletedCount === 0) {
             throw createError({

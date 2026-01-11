@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, ObjectId } from 'mongoose'
 
 export interface IProject extends Document<ObjectId> {
     _id: ObjectId
+    userId: string
     title: string
     category: string
     createdAt: Date
@@ -15,6 +16,11 @@ export interface IProjectListItem {
 }
 
 const ProjectSchema = new Schema<IProject>({
+    userId: {
+        type: String,
+        required: true,
+        index: true
+    },
     title: {
         type: String,
         required: true

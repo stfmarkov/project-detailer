@@ -1,9 +1,13 @@
 import { Context } from "../models/Context"
 import { connectToMongoDB } from "../utils/mongodb"
+import { User } from "@supabase/supabase-js"
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { contextId, title, content } = body
+
+  const user = event.context.user as User
+
   if (!contextId || !title || !content) {
     throw createError({
       statusCode: 400,
@@ -12,7 +16,7 @@ export default defineEventHandler(async (event) => {
   }
   try {
     await connectToMongoDB()
-    await Context.findByIdAndUpdate(contextId, { title, content })
+    await Context.findOneAndUpdate({ _id: contextId, userId: user.id }, { title, content })
     return {
       success: true,
       message: 'Context updated successfully'

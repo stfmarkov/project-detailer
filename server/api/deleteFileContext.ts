@@ -1,8 +1,10 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { Context } from '../models/Context'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
+  const user = event.context.user as User
 
   const { fileId } = body
 
@@ -17,7 +19,7 @@ export default defineEventHandler(async (event) => {
     await connectToMongoDB()
 
     // Delete all context entries with this fileId
-    const result = await Context.deleteMany({ fileId })
+    const result = await Context.deleteMany({ fileId, userId: user.id })
 
     return {
       success: true,

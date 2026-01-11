@@ -1,9 +1,10 @@
 import { Project } from '../models/Project'
+import { User } from '@supabase/supabase-js'
+
 export default defineEventHandler(async (event) => {
     const query = getQuery(event)
     const { projectId } = query
-
-    console.log(query)
+    const user = event.context.user as User
 
     if (!projectId) {
         throw createError({
@@ -14,7 +15,7 @@ export default defineEventHandler(async (event) => {
 
     try {
         await connectToMongoDB()
-        const project = await Project.findById(projectId)
+        const project = await Project.findOne({ _id: projectId, userId: user.id })
         return project ? project : null
     } catch (error) {
         throw createError({

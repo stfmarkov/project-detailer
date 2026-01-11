@@ -4,6 +4,7 @@ type TaskStatus = 'pending' | 'in_progress' | 'completed'
 
 export interface ITask extends Document<ObjectId> {
     _id: ObjectId
+    userId: string
     projectId: string
     title: string
     description: string
@@ -21,6 +22,11 @@ export interface ITaskItem {
 }
 
 const TaskSchema = new Schema<ITask>({
+    userId: {
+        type: String,
+        required: true,
+        index: true
+    },
     projectId: {
         type: String,
         required: true,

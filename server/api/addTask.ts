@@ -1,10 +1,11 @@
 import { connectToMongoDB } from '../utils/mongodb'
-import { Task } from '../models/Task'
 import { createTask } from '../services/createTask'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { projectId, title, description } = body
+    const user = event.context.user as User
 
     if (!projectId || !title) {
         throw createError({
@@ -16,7 +17,7 @@ export default defineEventHandler(async (event) => {
     try {
         await connectToMongoDB()
 
-        const { success, message: task } = await createTask(title, description, projectId)
+        const { success, message: task } = await createTask(title, description, projectId, user.id)
 
         return {
             success,

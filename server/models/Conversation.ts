@@ -7,6 +7,7 @@ export interface IMessage {
 
 export interface IConversation extends Document<ObjectId> {
     _id: ObjectId
+    userId: string
     projectId: string
     title: string
     messages: IMessage[]
@@ -23,6 +24,11 @@ export interface IConversationListItem {
 }
 
 const ConversationSchema = new Schema<IConversation>({
+    userId: {
+        type: String,
+        required: true,
+        index: true
+    },
     projectId: {
         type: String,
         required: true,

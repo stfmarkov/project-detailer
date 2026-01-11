@@ -1,9 +1,11 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { Conversation } from '../models/Conversation'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { conversationId, title } = body
+    const user = event.context.user as User
 
     if (!conversationId) {
         throw createError({
@@ -23,7 +25,7 @@ export default defineEventHandler(async (event) => {
         await connectToMongoDB()
 
         const conversation = await Conversation.findOneAndUpdate(
-            { conversationId },
+            { conversationId, userId: user.id },
             { title: title.trim() },
             { new: true }
         )

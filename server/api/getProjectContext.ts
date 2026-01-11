@@ -1,9 +1,11 @@
 import { connectToMongoDB } from '../utils/mongodb'
 import { Context } from '../models/Context'
+import { User } from '@supabase/supabase-js'
 
 export default defineEventHandler(async (event) => {
     const body = await getQuery(event)
     const { projectId } = body
+    const user = event.context.user as User
 
     if (!projectId) {
         throw createError({
@@ -18,6 +20,7 @@ export default defineEventHandler(async (event) => {
         const context = await Context.find(
             {
                 projectId,
+                userId: user.id,
                 fileId: { $exists: false }
             },
             '-__v -embedding',
@@ -29,6 +32,7 @@ export default defineEventHandler(async (event) => {
             { 
                 $match: { 
                     projectId, 
+                    userId: user.id,
                     fileId: { $exists: true, $ne: null } 
                 } 
             },
