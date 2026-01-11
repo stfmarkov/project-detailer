@@ -94,7 +94,7 @@ const archiveConversation = async (conversationId: string, event: Event) => {
     try {
         const result = await conversationsStore.extractConversationContext(conversationId, true)
         
-        alert(result.message)
+        alert(result?.message || 'Failed to extract conversation context')
         
         // If we're viewing the archived conversation, navigate away
         if (route.query.id === conversationId) {
