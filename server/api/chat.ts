@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
     }).sort({ createdAt: -1 }).lean()
 
     // Get answer from Claude using retrieved contexts and tasks
-    const answer = await chat(question, results, tasks, projectId, conversationId)
+    const answer = await chat(question, results, tasks, projectId, conversationId, user.id)
 
     conversation.messages.push({ role: 'user', content: question })
     conversation.messages.push({ role: 'assistant', content: answer })

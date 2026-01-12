@@ -12,9 +12,10 @@ export const useConversationsStore = defineStore('conversations', {
     }),
     actions: {
         async getConversations(projectId: string) {
-            const conversations = await handleRequest(() => $fetch<IConversationListItem[]>('/api/getConversations', {
+            const conversations = await handleRequest(
+                () => $fetch<IConversationListItem[]>('/api/getConversations', {
                 query: { projectId }
-            }))
+            }), { showToast: false })
             if (conversations) {
                 this.conversations = conversations
             }
@@ -22,7 +23,7 @@ export const useConversationsStore = defineStore('conversations', {
         async getConversation(conversationId: string) {
             const conversation = await handleRequest(() => $fetch<IConversation>('/api/getConversation', {
                 query: { conversationId }
-            }))
+            }), { showToast: false })
             if (conversation) {
                 this.conversation = conversation
             }
@@ -44,6 +45,9 @@ export const useConversationsStore = defineStore('conversations', {
                 method: 'POST',
                 body: { conversationId }
             }))
+        },
+        clearConversation() {
+            this.conversation = null
         },
         async extractConversationContext(conversationId: string, deleteAfter: boolean) {
             return await handleRequest(() => $fetch<{ message: string; data: { contexts: Array<{ title: string }> } }>('/api/extractConversationContext', {

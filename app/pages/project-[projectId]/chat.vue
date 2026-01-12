@@ -73,8 +73,8 @@ const sendMessage = async () => {
 
     messages.value.push({
       role: 'assistant',
-      content: response.answer,
-      sources: response.sources
+      content: response?.answer || '',
+      sources: response?.sources || []
     })
   } catch (error: any) {
     messages.value.push({
@@ -98,6 +98,10 @@ onMounted(async () => {
 
   // Load existing conversation if id is provided
   await loadConversation()
+})
+
+onUnmounted(() => {
+  conversationsStore.clearConversation()
 })
 
 // Watch for conversation changes (when clicking different conversations in sidebar)

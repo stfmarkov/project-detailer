@@ -53,7 +53,7 @@ const generateTitle = async (question: string) => {
   return (response.content[0] as Anthropic.TextBlock).text
 }
 
-const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[] = [], projectId: string, conversationId: string): Promise<string> => {
+const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[] = [], projectId: string, conversationId: string, userId: string): Promise<string> => {
   // Build context section from retrieved documents
   const contextText = contexts.length > 0
     ? contexts.map((ctx, i) => `[${i + 1}] ${ctx.title}\n${ctx.content}`).join('\n\n---\n\n')
@@ -121,7 +121,7 @@ const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[]
     const toolResults: Anthropic.ToolResultBlockParam[] = []
 
     for (const toolUse of toolUseBlocks) {
-      const { success, message } = await executeAIAction(toolUse.name, toolUse.input, projectId)
+      const { success, message } = await executeAIAction(toolUse.name, toolUse.input, projectId, userId)
 
 
       toolResults.push({
