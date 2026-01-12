@@ -102,6 +102,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
   conversationsStore.clearConversation()
+  conversationsStore.clearConversations()
+  globalStore.setDrawerChild(null)
 })
 
 // Watch for conversation changes (when clicking different conversations in sidebar)

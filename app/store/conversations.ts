@@ -49,6 +49,9 @@ export const useConversationsStore = defineStore('conversations', {
         clearConversation() {
             this.conversation = null
         },
+        clearConversations() {
+            this.conversations = []
+        },
         async extractConversationContext(conversationId: string, deleteAfter: boolean) {
             return await handleRequest(() => $fetch<{ message: string; data: { contexts: Array<{ title: string }> } }>('/api/extractConversationContext', {
                 method: 'POST',
