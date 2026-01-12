@@ -1,6 +1,5 @@
-import { connectToMongoDB } from '../utils/mongodb'
-import { Task } from '../models/Task'
 import { User } from '@supabase/supabase-js'
+import getTasks from '../services/getTasks'
 
 export default defineEventHandler(async (event) => {
     const query = getQuery(event)
@@ -15,13 +14,7 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-        await connectToMongoDB()
-
-        const tasks = await Task.find({ projectId, userId: user.id })
-            .sort({ createdAt: -1 })
-            .lean()
-
-        return tasks
+        return await getTasks(projectId as string, user.id)
     } catch (error: any) {
         console.error('Error getting tasks:', error)
         throw createError({

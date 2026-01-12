@@ -11,12 +11,6 @@ interface ChatContext {
   content: string
 }
 
-interface ChatTask {
-  title: string
-  description: string
-  status: string
-}
-
 const tools: Anthropic.Tool[] = [
   {
     name: 'create_task',
@@ -34,6 +28,19 @@ const tools: Anthropic.Tool[] = [
         }
       },
       required: ['title']
+    }
+  },
+  {
+    name: 'get_tasks',
+    description: 'Get the list of tasks for the project. Use this when the user asks to get the list of tasks.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        status: {
+          type: 'string',
+          description: 'The status of the tasks to get'
+        }
+      },
     }
   }
 ]
@@ -53,17 +60,11 @@ const generateTitle = async (question: string) => {
   return (response.content[0] as Anthropic.TextBlock).text
 }
 
-const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[] = [], projectId: string, conversationId: string, userId: string): Promise<string> => {
+const chat = async (question: string, contexts: ChatContext[], projectId: string, conversationId: string, userId: string): Promise<string> => {
   // Build context section from retrieved documents
   const contextText = contexts.length > 0
     ? contexts.map((ctx, i) => `[${i + 1}] ${ctx.title}\n${ctx.content}`).join('\n\n---\n\n')
     : 'No relevant information found in the project knowledge base.'
-
-  // Build tasks section
-  const tasksText = tasks.length > 0
-    ? tasks.map(t => `- [${t.status.toUpperCase()}] ${t.title}${t.description ? `: ${t.description}` : ''}`).join('\n')
-    : 'No active tasks.'
-
 
   // Fetch conversation history
   const conversation = await Conversation.findOne({ conversationId })
@@ -78,15 +79,9 @@ const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[]
     3. When answering, reference which piece of context you're using when helpful
     4. Be concise but thorough
     5. If asked about something not in the context, don't make up information
-    6. When asked about tasks, refer to the active tasks list
-    7. You can help prioritize, summarize, or explain tasks based on the project context
-    8. You can use the tools to create new tasks
 
     PROJECT CONTEXT:
     ${contextText}
-
-    ACTIVE TASKS:
-    ${tasksText}
 
     TOOL USAGE:
     When using a tool, you must use the tool name and parameters exactly as specified. Do not use any other text or formatting.
@@ -121,14 +116,14 @@ const chat = async (question: string, contexts: ChatContext[], tasks: ChatTask[]
     const toolResults: Anthropic.ToolResultBlockParam[] = []
 
     for (const toolUse of toolUseBlocks) {
-      const { success, message } = await executeAIAction(toolUse.name, toolUse.input, projectId, userId)
-
+      const { success, message, data } = await executeAIAction(toolUse.name, toolUse.input, projectId, userId)
+      
 
       toolResults.push({
         type: 'tool_result',
         tool_use_id: toolUse.id,
         content: success
-          ? `Successfully executed tool: ${toolUse.name}`
+          ? `Successfully executed tool: ${toolUse.name} with data: ${JSON.stringify(data)}`
           : `Failed to execute ${toolUse.name}: ${message}`
       })
 

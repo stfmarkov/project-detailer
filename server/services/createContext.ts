@@ -2,7 +2,7 @@ import { connectToMongoDB } from '../utils/mongodb'
 import { generateEmbedding } from '../utils/embeddings'
 import { Context } from '../models/Context'
 
-export async function createContext(title: string, content: string, projectId: string, userId: string) {
+export default async (title: string, content: string, projectId: string, userId: string) => {
     await connectToMongoDB()
 
     // Generate embedding for the content

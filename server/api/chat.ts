@@ -60,15 +60,8 @@ export default defineEventHandler(async (event) => {
       }
     ])
 
-    // Fetch active tasks (pending and in_progress)
-    const tasks = await Task.find({
-      projectId,
-      userId: user.id,
-      status: { $in: ['pending', 'in_progress'] }
-    }).sort({ createdAt: -1 }).lean()
-
-    // Get answer from Claude using retrieved contexts and tasks
-    const answer = await chat(question, results, tasks, projectId, conversationId, user.id)
+    // Get answer from Claude using retrieved contexts
+    const answer = await chat(question, results, projectId, conversationId, user.id)
 
     conversation.messages.push({ role: 'user', content: question })
     conversation.messages.push({ role: 'assistant', content: answer })
