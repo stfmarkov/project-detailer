@@ -1,5 +1,11 @@
 <script setup lang="ts">
 import { useGlobalStore } from '../store/global'
+import { onClickOutside } from '@vueuse/core'
+
+const drawerMenuRef = ref<HTMLDivElement | null>(null)
+onClickOutside(drawerMenuRef, () => {
+    isOpen.value = false
+})
 
 const globalStore = useGlobalStore()
 const drawerChild = computed(() => globalStore.drawerChild)
@@ -18,7 +24,7 @@ const switchDrawer = () => {
 </script>
 
 <template>
-    <div v-if="drawerComponent" class="drawer-menu" :class="{ 'drawer-menu--open': isOpen }">
+    <div v-if="drawerComponent" ref="drawerMenuRef" class="drawer-menu" :class="{ 'drawer-menu--open': isOpen }">
         <div class="drawer-menu__switch" @click="switchDrawer">
             <div class="drawer-menu__switch-icon">
                 <Icon :name="isOpen ? 'mdi:menu-close' : 'mdi:menu-open'" />

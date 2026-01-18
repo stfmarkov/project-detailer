@@ -165,6 +165,7 @@ onMounted(fetchConversations)
                 <NuxtLink 
                     v-else
                     class="conversation-item" 
+                    :class="{ 'active': route.query.id === conversation.conversationId }"
                     :to="`/project-${projectId}/chat?id=${conversation.conversationId}`"
                 >
                     <div class="conversation-icon">
@@ -280,6 +281,11 @@ onMounted(fetchConversations)
     transition: all 0.2s ease;
     text-decoration: none;
     color: inherit;
+}
+
+.conversation-item.active {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: #2ed573;
 }
 
 .conversation-item:hover {

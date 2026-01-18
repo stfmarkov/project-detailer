@@ -24,6 +24,10 @@ const chatContainer = ref<HTMLElement | null>(null)
 
 const conversationId = ref(route.query.id as string)
 
+const chatTitle = computed(() => {
+  return conversationsStore.conversation?.title || project.value?.title || 'Project Detailer'
+})
+
 const scrollToBottom = () => {
   nextTick(() => {
     if (chatContainer.value) {
@@ -120,7 +124,7 @@ watch(() => route.query.id, async (newId) => {
 </script>
 
 <template>
-  <ProjectHeader :title="project?.title || 'Project Detailer'" subtitle="Ask questions about your project" />
+  <ProjectHeader :title="chatTitle" subtitle="Ask questions about your project" />
 
 
   <div class="chat-area">
