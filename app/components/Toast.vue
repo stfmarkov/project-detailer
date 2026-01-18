@@ -21,6 +21,7 @@ import { useGlobalStore } from '@/store/global'
         right: 20px;
         padding: 10px;
         border-radius: 5px;
+        z-index: 1000;
         &.success {
             background-color: #008000;
         }

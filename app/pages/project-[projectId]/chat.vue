@@ -2,6 +2,7 @@
 import { useGlobalStore } from '../../store/global'
 import { useConversationsStore } from '../../store/conversations'
 import { useProjectsStore } from '../../store/projects'
+import type { Message } from '../../models/chat'
 
 const globalStore = useGlobalStore()
 const conversationsStore = useConversationsStore()
@@ -10,12 +11,6 @@ const projectsStore = useProjectsStore()
 definePageMeta({
   layout: 'project'
 })
-
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  sources?: Array<{ title: string; score: number }>
-}
 
 const project = computed(() => projectsStore.currentProject)
 const route = useRoute()
@@ -51,15 +46,14 @@ const loadConversation = async () => {
 const sendMessage = async () => {
   if (!conversationId.value) {
     conversationId.value = crypto.randomUUID()
-    router.replace({ query: { id: conversationId.value } })
   }
 
   if (!projectId.value.trim() || !question.value.trim() || isLoading.value) return
 
   const userQuestion = question.value
+  let responseMessage: Message | null = null
   question.value = ''
 
-  // Add user message
   messages.value.push({
     role: 'user',
     content: userQuestion
@@ -71,19 +65,24 @@ const sendMessage = async () => {
   try {
     const response = await conversationsStore.sendMessage(projectId.value, userQuestion, conversationId.value)
 
-    messages.value.push({
-      role: 'assistant',
+    responseMessage = {
+      role: 'assistant' as const,
       content: response?.answer || '',
       sources: response?.sources || []
-    })
+    } as Message
+
+    router.replace({ query: { id: conversationId.value } })
   } catch (error: any) {
-    messages.value.push({
-      role: 'assistant',
+    responseMessage = {
+      role: 'assistant' as const,
       content: `Error: ${error.data?.statusMessage || 'Failed to get response'}`
-    })
+    } as Message
   } finally {
     isLoading.value = false
     scrollToBottom()
+    if (responseMessage) {
+      messages.value.push(responseMessage)
+    }
   }
 }
 
@@ -108,9 +107,6 @@ onUnmounted(() => {
 
 // Watch for conversation changes (when clicking different conversations in sidebar)
 watch(() => route.query.id, async (newId) => {
-  // Clear messages first
-  messages.value = []
-
   if (newId) {
     // Loading existing conversation
     conversationId.value = newId as string

@@ -20,6 +20,9 @@ const switchDrawer = () => {
 <template>
     <div v-if="drawerComponent" class="drawer-menu" :class="{ 'drawer-menu--open': isOpen }">
         <div class="drawer-menu__switch" @click="switchDrawer">
+            <div class="drawer-menu__switch-icon">
+                <Icon :name="isOpen ? 'mdi:menu-close' : 'mdi:menu-open'" />
+            </div>
         </div>
         <component :is="drawerComponent" />
     </div>
@@ -48,13 +51,13 @@ const switchDrawer = () => {
     position: absolute;
     opacity: 0.98;
     top: 20px;
-    left: -20px;
-    width: 20px;
-    height: 20px;
+    left: -30px;
+    width: 30px;
+    height: 30px;
     background-color: #1a1a2e;
     z-index: 100;
     cursor: pointer;
-    border-radius: 10px 0 0 10px;
+    border-radius: 15px 0 0 15px;
     display: flex;
     align-items: center;
     justify-content: center;
